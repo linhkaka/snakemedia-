@@ -22872,6 +22872,10 @@ Nếu bạn làm việc liên tục, dự án được lưu mỗi 3 phút.</tran
             <source>Signed in to Google. You can close this page and return to Jenny Script.</source>
             <translation>Đã đăng nhập Google. Bạn có thể đóng trang này và quay lại Jenny Script.</translation>
         </message>
+        <message>
+            <source>Google Drive access was not granted. Sign in again and tick the permission to see and edit the Google Drive files used with Jenny Script.</source>
+            <translation>Bạn chưa cấp quyền Google Drive. Hãy đăng nhập lại và tick ô quyền xem, chỉnh sửa các tệp Google Drive dùng với Jenny Script.</translation>
+        </message>
     </context>
     <context>
         <name>ManagementLayer::GoogleDocsManager</name>
@@ -23002,6 +23006,10 @@ Nếu bạn làm việc liên tục, dự án được lưu mỗi 3 phút.</tran
         <message>
             <source>Previous Google Docs operation is still in progress.</source>
             <translation>Thao tác Google Docs trước đó vẫn đang chạy.</translation>
+        </message>
+        <message>
+            <source>Jenny Script has no access to Google Drive. Push again, sign in and tick the permission to see and edit the Google Drive files used with Jenny Script.</source>
+            <translation>Jenny Script chưa có quyền truy cập Google Drive. Hãy bấm Đẩy lên lần nữa, đăng nhập và tick ô quyền xem, chỉnh sửa các tệp Google Drive dùng với Jenny Script.</translation>
         </message>
     </context>
 </TS>

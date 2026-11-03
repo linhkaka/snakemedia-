@@ -156,6 +156,15 @@ void GoogleDocsManager::Implementation::showError(const QString& _title,
         break;
     }
     case GoogleDriveError::Type::Forbidden: {
+        //
+        // The token has no Drive scope (the permission was unticked on the consent screen)
+        //
+        if (_error.reason == QLatin1String("insufficientPermissions")) {
+            authManager->signOut();
+            text = tr("Jenny Script has no access to Google Drive. Push again, sign in and tick the "
+                      "permission to see and edit the Google Drive files used with Jenny Script.");
+            break;
+        }
         text = tr("Google denied access to the file. It may be owned by another account or "
                   "the access was not granted.");
         break;

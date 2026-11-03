@@ -41,6 +41,7 @@ const QString kEmailSettingsKey = QStringLiteral("account/google/email");
 const QUrl kAuthorizationUrl(QStringLiteral("https://accounts.google.com/o/oauth2/v2/auth"));
 const QUrl kTokenUrl(QStringLiteral("https://oauth2.googleapis.com/token"));
 const QUrl kRevokeUrl(QStringLiteral("https://oauth2.googleapis.com/revoke"));
+const QByteArray kDriveFileScope = QByteArrayLiteral("https://www.googleapis.com/auth/drive.file");
 
 /**
  * @brief Read the email claim from the payload of an OpenID Connect id token
@@ -90,7 +91,7 @@ GoogleAuthManager::Implementation::Implementation(GoogleAuthManager* _q)
     flow.setRequestedScopeTokens({
         QByteArrayLiteral("openid"),
         QByteArrayLiteral("email"),
-        QByteArrayLiteral("https://www.googleapis.com/auth/drive.file"),
+        kDriveFileScope,
     });
     flow.setPkceMethod(QOAuth2AuthorizationCodeFlow::PkceMethod::S256);
     flow.setAutoRefresh(true);
@@ -180,6 +181,20 @@ GoogleAuthManager::GoogleAuthManager(QObject* _parent)
     connect(&d->flow, &QAbstractOAuth2::refreshTokenChanged, this,
             [this](const QString& _refreshToken) { d->storeRefreshToken(_refreshToken); });
     connect(&d->flow, &QAbstractOAuth::granted, this, [this] {
+        //
+        // Google consent screen lets the user untick single permissions, without Drive access the
+        // integration can't work, so drop such a sign in
+        //
+        if (const auto grantedScopes = d->flow.grantedScopeTokens();
+            !grantedScopes.isEmpty() && !grantedScopes.contains(kDriveFileScope)) {
+            d->finishRefresh(false);
+            signOut();
+            d->finishSignIn(tr("Google Drive access was not granted. Sign in again and tick the "
+                               "permission to see and edit the Google Drive files used with "
+                               "Jenny Script."));
+            return;
+        }
+
         if (const auto email = emailFromIdToken(d->flow.idToken()); !email.isEmpty()) {
             d->email = email;
             setSettingsValue(kEmailSettingsKey, email);
