@@ -1,0 +1,4 @@
+# Jenny Script fork: off by one pixel (181 vs 180) under QT_QPA_PLATFORM=offscreen on the
+# GitHub ubuntu-24.04 runner, most likely sub-pixel font rounding. Still runs and is reported as BFAIL.
+[preservePosition:continuous-offscreen-cursor]
+*
