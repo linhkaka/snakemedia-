@@ -42,3 +42,5 @@ libtool
 POTFILES
 stamp-h1
 _en_source.qm
+# Jenny Script fork: Google OAuth client credentials (never commit)
+src/google_oauth.pri

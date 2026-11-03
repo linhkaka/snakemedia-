@@ -87,6 +87,17 @@ jobs:
           export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/src/_build:$GITHUB_WORKSPACE/src/_build/libs:$GITHUB_WORKSPACE/src/_build/plugins${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
           ./tst_remote_text_changes
 
+      - name: Build and run Google Drive client tests
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          mkdir -p work/google-drive-client-tests
+          cd work/google-drive-client-tests
+          qmake ../../tests/google_drive_client/google_drive_client.pro CONFIG+=release
+          make -j$(nproc)
+          ./tst_google_drive_client
+
   windows:
     name: Windows x64 (portable zip)
     runs-on: windows-2022
