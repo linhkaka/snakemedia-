@@ -11,6 +11,9 @@ Roadmap: [docs/FORK_PLAN.md](docs/FORK_PLAN.md).
 
 - Built from public sources only: the private `src/cloud` submodule and the private PRO plugins are not available.
 - Crashpad / BugSplat crash reporting can be disabled with `CONFIG+=no_crashpad` (the fork CI always does this).
+- Vietnamese UI translation: `src/core/translations/translation_vi.ts`. The `.qm` is not committed; CI builds it with
+  `lrelease src/core/translations/translation_vi.ts -qm src/core/translations/translation_vi.qm`
+  (run the same command before `qmake` when building locally).
 - Own CI workflow: [.github/workflows/build_fork.yml](.github/workflows/build_fork.yml).
   Upstream workflows need private submodules and secrets; disable them in the GitHub UI
   (Actions → workflow → Disable workflow) instead of deleting them.
@@ -55,3 +58,7 @@ Keep this list up to date: these are the files to check when merging upstream.
 |---|---|
 | `src/core/core.pro` | Crashpad block wrapped in `!no_crashpad` |
 | `src/core/management_layer/application_manager.cpp` | Crashpad includes, client, `initCrashpad()` and `sendCrashInfo()` guarded by `NO_CRASHPAD`; startup telemetry (`telemetry.storyapps.dev`) disabled in `sendStartupStatistics()` |
+| `src/core/management_layer/application_manager.cpp` | `QLocale::Vietnamese` → `translation_vi.qm` |
+| `src/core/ui/settings/language_dialog.cpp`, `src/core/ui/settings/settings_view.cpp` | "Tiếng Việt" in the language list |
+| `src/core/ui/onboarding/onboarding_navigator.cpp`, `src/core/ui/onboarding/onboarding_view.cpp` | "Tiếng Việt" in the first-run language list |
+| `src/starc.pro`, `src/core/translations.qrc` | `translation_vi.ts` / `translation_vi.qm` registered |

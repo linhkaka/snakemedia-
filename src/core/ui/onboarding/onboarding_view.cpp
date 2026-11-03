@@ -134,6 +134,7 @@ void OnboardingView::Implementation::initLanguagePage()
     auto teluguLanguage = initLanguageButton("తెలుగు", QLocale::Telugu, 99);
     auto turkishLanguage = initLanguageButton("Türkçe", QLocale::Turkish, 88);
     auto ukrainianLanguage = initLanguageButton("Українська", QLocale::Ukrainian, 96);
+    auto vietnameseLanguage = initLanguageButton("Tiếng Việt", QLocale::Vietnamese, 100);
     //
     // Если мы умеем в язык системы, то оставляем выбранным его
     //
@@ -203,6 +204,7 @@ void OnboardingView::Implementation::initLanguagePage()
         tamilLanguage,
         teluguLanguage,
         koreanLanguage,
+        vietnameseLanguage,
     });
 
     languageTranslationProgressLink = new Body1LinkLabel(languagePage);
@@ -254,6 +256,7 @@ void OnboardingView::Implementation::initLanguagePage()
     languagePageLayout->addWidget(tagalogLanguage, rowForThirdColumn++, 2);
     languagePageLayout->addWidget(turkishLanguage, rowForThirdColumn++, 2);
     languagePageLayout->addWidget(ukrainianLanguage, rowForThirdColumn++, 2);
+    languagePageLayout->addWidget(vietnameseLanguage, rowForThirdColumn++, 2);
     int rowForFifthColumn = 1;
     languagePageLayout->addWidget(arabicLanguage, rowForFifthColumn++, 3);
     languagePageLayout->addWidget(chineseLanguage, rowForFifthColumn++, 3);

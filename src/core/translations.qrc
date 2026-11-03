@@ -32,5 +32,6 @@
         <file>translations/translation_te.qm</file>
         <file>translations/translation_sv.qm</file>
         <file>translations/translation_el.qm</file>
+        <file>translations/translation_vi.qm</file>
     </qresource>
 </RCC>

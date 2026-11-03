@@ -51,6 +51,7 @@ TRANSLATIONS += \
     core/translations/translation_te.ts \
     core/translations/translation_tr.ts \
     core/translations/translation_uk.ts \
+    core/translations/translation_vi.ts \
     core/translations/translation_zh.ts
 
 #

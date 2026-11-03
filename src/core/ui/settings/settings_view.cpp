@@ -3215,6 +3215,9 @@ void SettingsView::setApplicationLanguage(int _language)
         case QLocale::Ukrainian: {
             return "Українська";
         }
+        case QLocale::Vietnamese: {
+            return "Tiếng Việt";
+        }
         default: {
             return QLocale::languageToString(static_cast<QLocale::Language>(_language));
         }

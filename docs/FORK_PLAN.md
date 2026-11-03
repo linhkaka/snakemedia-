@@ -153,9 +153,10 @@ Data model đã public (`src/corelib/business_layer/model/characters`, `location
 | 1b Doc có sẵn | chưa bắt đầu | | |
 | 2 Project trên Drive | chưa bắt đầu | | |
 | 3 Realtime | tạm hoãn | | |
-| 4 Tiếng Việt | tùy chọn | | |
+| 4 Tiếng Việt | đang làm (chen trước Phase 0 theo yêu cầu) | `phase-4-vietnamese` | dịch đủ 4.129 chuỗi bằng AI, chờ build CI và team rà thuật ngữ |
 | 5 Plugin | tùy chọn | | |
 
 **Nhật ký** (mới nhất ở trên cùng). Mỗi dòng ghi: `dd/mm/yyyy — đã làm gì — việc tiếp theo`
+- 03/11/2026 — Phase 4 chen trước: `translation_vi.ts` (4.129/4.129 chuỗi; thuật ngữ dạng "Việt (English)"; INT./EXT., V.O., CONT'D giữ nguyên; giờ cảnh NGÀY/ĐÊM/SÁNG/TỐI), thêm Tiếng Việt vào danh sách ngôn ngữ, CI chạy lrelease — build CI, Kha test giao diện, team rà thuật ngữ; sau đó quay lại 0.5 và 0.9.
 - 03/11/2026 — CI run 41627729069: Windows x64 build và đóng gói OK; Linux compile OK, test 41/42 (`continuous-offscreen-cursor` lệch 1px, đưa vào BLACKLIST); tắt telemetry — push commit mới, Kha smoke test bản zip, làm 0.5 rebrand và 0.9.
 - 03/11/2026 — chốt D1–D6; fork lên `vienglacial/starc`, clone, init 2 submodule public; thêm `no_crashpad` (0.7); viết `build_fork.yml` (Linux: build và chạy test; Windows: zip portable) và `README_FORK.md` — push branch, bật Actions, đọc kết quả CI; tiếp theo là 0.5 rebrand, 0.6 endpoint (lưu ý `telemetry.storyapps.dev` gửi thống kê lúc khởi động).

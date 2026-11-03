@@ -63,6 +63,7 @@ public:
     PercentRadioButton* telugu = nullptr;
     PercentRadioButton* turkish = nullptr;
     PercentRadioButton* ukrainian = nullptr;
+    PercentRadioButton* vietnamese = nullptr;
 
     Body1LinkLabel* languageHowToAddLink = nullptr;
 
@@ -106,6 +107,7 @@ LanguageDialog::Implementation::Implementation(QWidget* _parent)
     , telugu(new PercentRadioButton(_parent, 93))
     , turkish(new PercentRadioButton(_parent, 85))
     , ukrainian(new PercentRadioButton(_parent, 92))
+    , vietnamese(new PercentRadioButton(_parent, 100))
     , languageHowToAddLink(new Body1LinkLabel(_parent))
     , translationProgressLabel(new Body2Label(_parent))
     , improveButton(new Button(_parent))
@@ -177,6 +179,8 @@ LanguageDialog::Implementation::Implementation(QWidget* _parent)
     turkish->setProperty(kLanguageKey, QLocale::Turkish);
     ukrainian->setText("Українська");
     ukrainian->setProperty(kLanguageKey, QLocale::Ukrainian);
+    vietnamese->setText("Tiếng Việt");
+    vietnamese->setProperty(kLanguageKey, QLocale::Vietnamese);
 
     languageHowToAddLink->setLink(QUrl("https://starc.app/translate"));
     translationProgressLabel->hide();
@@ -205,7 +209,7 @@ std::vector<PercentRadioButton*> LanguageDialog::Implementation::languages() con
         dutch,      english,          french,     galician,  german,    greek,    hebrew,
         hindi,      hungarian,        indonesian, italian,   korean,    persian,  polish,
         portuguese, portugueseBrazil, romanian,   russian,   slovenian, spanish,  swedish,
-        tamil,      telugu,           turkish,    ukrainian,
+        tamil,      telugu,           turkish,    ukrainian, vietnamese,
     };
 }
 
@@ -239,7 +243,7 @@ LanguageDialog::LanguageDialog(QWidget* _parent)
         d->swedish,     d->turkish,    d->ukrainian,
         d->arabic,      d->chinese,    d->hebrew,
         d->hindi,       d->persian,    d->tamil,
-        d->telugu,      d->korean,
+        d->telugu,      d->korean,     d->vietnamese,
     });
 
     int row = 0;
@@ -280,6 +284,7 @@ LanguageDialog::LanguageDialog(QWidget* _parent)
     addButton(d->swedish);
     addButton(d->turkish);
     addButton(d->ukrainian);
+    addButton(d->vietnamese);
     maximumRow = std::max(row, maximumRow);
     //
     row = 0;

@@ -1491,6 +1491,11 @@ void ApplicationManager::Implementation::setTranslation(QLocale::Language _langu
         translation = "uk";
         break;
     }
+
+    case QLocale::Vietnamese: {
+        translation = "vi";
+        break;
+    }
     }
 
     QLocale::setDefault(QLocale(currentLanguage));

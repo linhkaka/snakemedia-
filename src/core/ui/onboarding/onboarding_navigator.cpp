@@ -375,6 +375,7 @@ void OnboardingNavigator::Implementation::initUiPage()
     addLanguage("Svenska", QLocale::Swedish, 32);
     addLanguage("Türkçe", QLocale::Turkish, 85);
     addLanguage("Українська", QLocale::Ukrainian, 92);
+    addLanguage("Tiếng Việt", QLocale::Vietnamese, 100);
     addLanguage("اَلْعَرَبِيَّةُ", QLocale::Arabic, 74);
     addLanguage("فارسی", QLocale::Persian, 50);
     addLanguage("עִבְרִית", QLocale::Hebrew, 73);
