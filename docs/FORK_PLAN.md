@@ -143,6 +143,8 @@ Data model đã public (`src/corelib/business_layer/model/characters`, `location
 - D5 = team viết theo chuẩn kịch bản quốc tế; khi đưa lên Google Docs thì dùng text Fountain dàn trang bằng Fountainize, nên chế độ Fountain là ưu tiên số 1. Scene heading nhận **cả hai** kiểu `INT./EXT.` và `NỘI./NGOẠI.`. Chưa có file mẫu.
 - D6 = **bỏ Crashpad** (`CONFIG+=no_crashpad`).
 - Build thử bằng **GitHub Actions** (máy dev chưa có Qt/MSVC/WSL).
+- 0.6 endpoint: **tắt** telemetry `telemetry.storyapps.dev` (đã làm); crash BugSplat tắt bằng `no_crashpad`. **Giữ**: Unsplash, gproxy (lưu ý: text đi qua proxy HTTP lạ, chỉ dùng ở cover generator), logline help, tải font, từ điển hunspell, link Help. **Ẩn** link blog/contacts/storyapps.dev (làm cùng 0.5, trong About/menu).
+- Workflow upstream chưa được GitHub đăng ký trong fork, nên chưa tắt được. Khi merge vào `master` lần đầu thì chạy `gh workflow disable` cho `build_starc_linux.yml`, `build_starc_mac.yml`, `build_starc_windows.yml`, `clang-format.yml`.
 
 | Phase | Trạng thái | Branch | Ghi chú |
 |---|---|---|---|

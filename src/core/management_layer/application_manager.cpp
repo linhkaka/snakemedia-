@@ -707,6 +707,13 @@ void ApplicationManager::Implementation::sendStartupStatistics()
     }
 
     //
+    // Jenny Script fork: never send startup telemetry to upstream servers
+    //
+    if (true) {
+        return;
+    }
+
+    //
     // Построим ссылку, чтобы учитывать запрос на проверку обновлений
     //
     auto loader = new NetworkRequest;

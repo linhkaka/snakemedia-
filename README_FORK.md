@@ -54,4 +54,4 @@ Keep this list up to date: these are the files to check when merging upstream.
 | File | Change |
 |---|---|
 | `src/core/core.pro` | Crashpad block wrapped in `!no_crashpad` |
-| `src/core/management_layer/application_manager.cpp` | Crashpad includes, client, `initCrashpad()` and `sendCrashInfo()` guarded by `NO_CRASHPAD` |
+| `src/core/management_layer/application_manager.cpp` | Crashpad includes, client, `initCrashpad()` and `sendCrashInfo()` guarded by `NO_CRASHPAD`; startup telemetry (`telemetry.storyapps.dev`) disabled in `sendStartupStatistics()` |
