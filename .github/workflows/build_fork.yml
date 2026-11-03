@@ -10,6 +10,10 @@ env:
   QT_MODULES: qt5compat qtimageformats qtmultimedia qtspeech qtwebsockets qtnetworkauth
   # needed until miurahr/aqtinstall#1007 ships 3.3.1 for Qt >= 6.11.0 (same pin as upstream)
   AQT_SOURCE: aqtinstall @ git+https://github.com/miurahr/aqtinstall@16db45a70b5905ad596941b223469bc86a56901e
+  # OAuth client of the app; qmake reads it for core.pro during the build step (empty for PRs
+  # from other forks, Google sign in is disabled then)
+  GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+  GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
 
 on:
   push:
@@ -60,9 +64,6 @@ jobs:
 
       - name: Run QMake
         shell: bash
-        env:
-          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
-          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
         run: |
           cd src
           qmake starc.pro CONFIG+=release CONFIG+=no_crashpad
@@ -161,9 +162,6 @@ jobs:
 
       - name: Run QMake
         shell: bash
-        env:
-          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
-          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
         run: |
           cd src
           qmake starc.pro CONFIG+=release CONFIG+=no_crashpad
