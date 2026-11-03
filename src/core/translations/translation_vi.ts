@@ -11429,7 +11429,7 @@ Nút "Đặt lại tất cả cài đặt" đặt lại mọi cài đặt liên 
         <message>
             <location filename="../../corelib/ui/modules/comments/comments_toolbar.cpp" line="564" />
             <source>Mark revisited</source>
-            <translation>Đánh dấu đã xem lại</translation>
+            <translation>Đánh dấu là đoạn đã sửa (Revision)</translation>
         </message>
         <message>
             <location filename="../../corelib/ui/modules/comments/comments_toolbar.cpp" line="568" />
