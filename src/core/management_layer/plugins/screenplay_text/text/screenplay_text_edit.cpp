@@ -1089,6 +1089,21 @@ void ScreenplayTextEdit::paintEvent(QPaintEvent* _event)
             verticalMargin = cursorR.height() / 2;
 
             //
+            // Jenny Script fork: a light band across the text width under scene headings, like in
+            // Celtx (only in the editor, it is not exported)
+            //
+            if (blockType == TextParagraphType::SceneHeading) {
+                const qreal bandPadding = DesignSystem::layout().px2();
+                const QRectF band(leftDelta + textLeft + spaceBetweenSceneNumberAndText,
+                                  cursorR.top() - bandPadding,
+                                  textRight - textLeft - 2 * spaceBetweenSceneNumberAndText,
+                                  cursorREnd.bottom() - cursorR.top() + 2 * bandPadding);
+                auto bandColor = palette().text().color();
+                bandColor.setAlphaF(0.12);
+                painter.fillRect(band, bandColor);
+            }
+
+            //
             // Определим цвет сцены
             //
             switch (blockType) {
