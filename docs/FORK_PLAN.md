@@ -149,7 +149,7 @@ Data model đã public (`src/corelib/business_layer/model/characters`, `location
 | Phase | Trạng thái | Branch | Ghi chú |
 |---|---|---|---|
 | 0 Nền móng | đang làm | `phase-0-foundation` | xong: 0.1, 0.2, 0.7, bản đầu 0.4/0.6/0.8. CI lần đầu: Windows build OK (zip portable), Linux build OK, test 41/42 (1 ca lệch 1px đã đưa vào BLACKLIST) |
-| 1 Google Docs | chưa bắt đầu | | |
+| 1 Google Docs | đang làm: code xong, CI xanh, chờ Kha test tay | `phase-1-gdocs` | đăng nhập (onboarding + Settings), đẩy lên / kéo về draft / mở trình duyệt; sửa Fountain importer (số cảnh, `..`, NỘI/NGOẠI) |
 | 1b Doc có sẵn | chưa bắt đầu | | |
 | 2 Project trên Drive | chưa bắt đầu | | |
 | 3 Realtime | tạm hoãn | | |
@@ -157,6 +157,7 @@ Data model đã public (`src/corelib/business_layer/model/characters`, `location
 | 5 Plugin | tùy chọn | | |
 
 **Nhật ký** (mới nhất ở trên cùng). Mỗi dòng ghi: `dd/mm/yyyy — đã làm gì — việc tiếp theo`
+- 04/11/2026 — Phase 1: GoogleDriveClient (+25 test), OAuth PKCE + QtKeychain 0.17.0, GoogleDocsManager (push/pull/open, kiểm sửa trên Docs bằng hash), menu chuột phải, đăng nhập ở onboarding và thẻ Tài khoản Google trong Settings, xử lý thiếu quyền Drive; Fountain importer sửa số cảnh / `..` / NỘI-NGOẠI (+17 test); tiếng Việt mặc định + sửa lỗi lưu ngôn ngữ onboarding; ẩn Thống kê; màu revision chuẩn dạng highlight; Courier New mặc định (Courier Prime thiếu 92/134 chữ Việt); dải xám dưới tiêu đề cảnh. Lỗi gặp: 403 access_denied (thiếu test user), thiếu scope Drive (bỏ tick ở consent) — Kha test tay checklist Google Docs (comment có mất khi ghi đè không), rồi gộp branch, làm nốt 0.5 rebrand và 0.9.
 - 03/11/2026 — Phase 4 chen trước: `translation_vi.ts` (4.129/4.129 chuỗi; thuật ngữ dạng "Việt (English)"; INT./EXT., V.O., CONT'D giữ nguyên; giờ cảnh NGÀY/ĐÊM/SÁNG/TỐI), thêm Tiếng Việt vào danh sách ngôn ngữ, CI chạy lrelease — build CI, Kha test giao diện, team rà thuật ngữ; sau đó quay lại 0.5 và 0.9.
 - 03/11/2026 — CI run 41627729069: Windows x64 build và đóng gói OK; Linux compile OK, test 41/42 (`continuous-offscreen-cursor` lệch 1px, đưa vào BLACKLIST); tắt telemetry — push commit mới, Kha smoke test bản zip, làm 0.5 rebrand và 0.9.
 - 03/11/2026 — chốt D1–D6; fork lên `vienglacial/starc`, clone, init 2 submodule public; thêm `no_crashpad` (0.7); viết `build_fork.yml` (Linux: build và chạy test; Windows: zip portable) và `README_FORK.md` — push branch, bật Actions, đọc kết quả CI; tiếp theo là 0.5 rebrand, 0.6 endpoint (lưu ý `telemetry.storyapps.dev` gửi thống kê lúc khởi động).
