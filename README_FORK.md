@@ -71,3 +71,4 @@ Keep this list up to date: these are the files to check when merging upstream.
 | `src/core/management_layer/content/project/project_manager.{h,cpp}` | Google Docs items in the navigator context menu (`googleDocsActionRequested`), `modelForDocument()`, `addDocumentDraft()` |
 | `src/core/management_layer/application_manager.cpp` | `GoogleDocsManager` created and connected under `GOOGLE_INTEGRATION` |
 | `src/corelib/business_layer/document/text/text_document.cpp` | revision marks are applied as highlight (`addReviewMark`) |
+| `src/corelib/data_layer/storage/settings_storage.cpp` | default screenplay / simple text templates use Courier New (Courier Prime has no Vietnamese letters) |

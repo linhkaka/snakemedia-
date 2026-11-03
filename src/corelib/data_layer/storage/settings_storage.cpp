@@ -259,7 +259,8 @@ SettingsStorage::Implementation::Implementation()
         //
         defaultSettings.insert(kComponentsSimpleTextAvailableKey, true);
         //
-        defaultSettings.insert(kComponentsSimpleTextEditorDefaultTemplateKey, "mono_cp_a4");
+        // Jenny Script fork: Courier New variant, see the screenplay template below
+        defaultSettings.insert(kComponentsSimpleTextEditorDefaultTemplateKey, "mono_cn_a4");
         defaultSettings.insert(kComponentsSimpleTextEditorCorrectTextOnPageBreaksKey, false);
         //
         // Параметры навигатора простого текстового документа
@@ -535,7 +536,11 @@ SettingsStorage::Implementation::Implementation()
         //
         defaultSettings.insert(kComponentsScreenplayAvailableKey, true);
         //
-        defaultSettings.insert(kComponentsScreenplayEditorDefaultTemplateKey, "world_cp");
+        //
+        // Jenny Script fork: Courier Prime has no Vietnamese letters (Ơ, Ư, ạ, ế...), use the
+        // Courier New variant of the international template by default
+        //
+        defaultSettings.insert(kComponentsScreenplayEditorDefaultTemplateKey, "world_cn");
         defaultSettings.insert(kComponentsScreenplayEditorShowSceneNumbersKey, false);
         defaultSettings.insert(kComponentsScreenplayEditorShowSceneNumbersOnLeftKey, true);
         defaultSettings.insert(kComponentsScreenplayEditorShowSceneNumbersOnRightKey, true);
