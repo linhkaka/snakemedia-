@@ -68,3 +68,5 @@ Keep this list up to date: these are the files to check when merging upstream.
 | `application_manager.cpp`, `onboarding_navigator.cpp`, `onboarding_view.cpp`, `language_dialog.cpp` | Vietnamese is the default and first language; onboarding saves the chosen language instead of the system one (upstream bug) |
 | `src/corelib/utils/helpers/color_helper.cpp`, `src/corelib/ui/modules/comments/comments_toolbar.cpp` | industry standard revision colors (Blue, Pink, Yellow, Green, Goldenrod, Buff, Salmon, Cherry, Tan); upstream colors still map to the same level |
 | `src/core/core.pro` | `include(management_layer/content/google/google.pri)` (Google integration, QtKeychain) |
+| `src/core/management_layer/content/project/project_manager.{h,cpp}` | Google Docs items in the navigator context menu (`googleDocsActionRequested`), `modelForDocument()`, `addDocumentDraft()` |
+| `src/core/management_layer/application_manager.cpp` | `GoogleDocsManager` created and connected under `GOOGLE_INTEGRATION` |

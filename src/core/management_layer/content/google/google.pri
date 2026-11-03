@@ -25,10 +25,12 @@ versionAtLeast(QT_VERSION, 6.9.0):qtHaveModule(networkauth) {
 
     HEADERS += \
         $$PWD/google_auth_manager.h \
+        $$PWD/google_docs_manager.h \
         $$PWD/google_drive_client.h
 
     SOURCES += \
         $$PWD/google_auth_manager.cpp \
+        $$PWD/google_docs_manager.cpp \
         $$PWD/google_drive_client.cpp
 } else {
     !build_pass:message("Qt >= 6.9 with networkauth is required for the Google integration")

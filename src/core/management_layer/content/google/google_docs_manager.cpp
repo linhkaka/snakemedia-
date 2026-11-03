@@ -1,0 +1,545 @@
+#include "google_docs_manager.h"
+
+#include "google_auth_manager.h"
+#include "google_drive_client.h"
+#include "../project/project_manager.h"
+
+#include <business_layer/export/screenplay/screenplay_export_options.h>
+#include <business_layer/export/screenplay/screenplay_fountain_exporter.h>
+#include <business_layer/import/fountain_text_normalizer.h>
+#include <business_layer/import/screenplay/screenplay_fountain_importer.h>
+#include <business_layer/model/screenplay/screenplay_information_model.h>
+#include <business_layer/model/screenplay/text/screenplay_text_model.h>
+#include <data_layer/storage/storage_facade.h>
+#include <ui/widgets/dialog/dialog.h>
+#include <ui/widgets/dialog/standard_dialog.h>
+
+#include <QCryptographicHash>
+#include <QDateTime>
+#include <QDesktopServices>
+#include <QDir>
+#include <QFile>
+#include <QPointer>
+#include <QTemporaryDir>
+#include <QUrl>
+#include <QUuid>
+
+#include <utility>
+
+
+namespace ManagementLayer {
+
+namespace {
+
+const QString kRootFolderName = QStringLiteral("Jenny Script");
+const QString kTextMimeType = QStringLiteral("text/plain; charset=UTF-8");
+const QString kDocumentUuidProperty = QStringLiteral("jsDocumentUuid");
+
+/**
+ * @brief Keys starting with "project" survive the settings reset
+ */
+QString settingsKey(const QUuid& _documentUuid, const QString& _name)
+{
+    return QString("project/google-docs/%1/%2")
+        .arg(_documentUuid.toString(QUuid::WithoutBraces), _name);
+}
+const QString kFileIdKey = QStringLiteral("file-id");
+const QString kTextHashKey = QStringLiteral("text-hash");
+const QString kSyncedAtKey = QStringLiteral("synced-at");
+
+/**
+ * @brief Hash of a Doc text, insensitive to line endings and trailing spaces added by Google Docs
+ */
+QString textHash(const QString& _text)
+{
+    QStringList lines = BusinessLayer::FountainTextNormalizer::normalize(_text).split('\n');
+    for (auto& line : lines) {
+        while (!line.isEmpty() && line.back().isSpace()) {
+            line.chop(1);
+        }
+    }
+    const auto text = lines.join('\n').trimmed();
+    return QString::fromLatin1(
+        QCryptographicHash::hash(text.toUtf8(), QCryptographicHash::Sha256).toHex());
+}
+
+QUrl documentUrl(const QString& _fileId)
+{
+    return QUrl(QString("https://docs.google.com/document/d/%1/edit").arg(_fileId));
+}
+
+} // namespace
+
+
+class GoogleDocsManager::Implementation
+{
+public:
+    Implementation(GoogleDocsManager* _q, QWidget* _parentWidget,
+                   ProjectManager* _projectManager);
+
+    QWidget* dialogParent() const;
+    void ask(const QString& _title, const QString& _text, const QVector<Dialog::ButtonInfo>& _buttons,
+             const std::function<void(int)>& _callback);
+    void inform(const QString& _title, const QString& _text);
+    void showError(const QString& _title, const GoogleDriveError& _error);
+
+    void withSignIn(const std::function<void()>& _action);
+    BusinessLayer::ScreenplayTextModel* screenplayModel(const QUuid& _documentUuid) const;
+    QByteArray exportFountain(BusinessLayer::ScreenplayTextModel* _model) const;
+
+    void push(const QUuid& _documentUuid);
+    void uploadNew(const QUuid& _documentUuid, const QByteArray& _content);
+    void updateExisting(const QUuid& _documentUuid, const QString& _fileId,
+                        const QByteArray& _content);
+    void storeSyncState(const QUuid& _documentUuid, const GoogleDriveFile& _file,
+                        bool _showPushedMessage);
+    void pull(const QUuid& _documentUuid);
+    void openInBrowser(const QUuid& _documentUuid);
+
+    GoogleDocsManager* q = nullptr;
+    QPointer<QWidget> parentWidget;
+    ProjectManager* projectManager = nullptr;
+    GoogleAuthManager* authManager = nullptr;
+    GoogleDriveClient* driveClient = nullptr;
+    std::function<void()> actionAfterSignIn;
+    bool isBusy = false;
+};
+
+GoogleDocsManager::Implementation::Implementation(GoogleDocsManager* _q, QWidget* _parentWidget,
+                                                  ProjectManager* _projectManager)
+    : q(_q)
+    , parentWidget(_parentWidget)
+    , projectManager(_projectManager)
+    , authManager(new GoogleAuthManager(_q))
+    , driveClient(new GoogleDriveClient(authManager->networkAccessManager(), _q))
+{
+    driveClient->setAccessTokenProvider([this] { return authManager->accessToken(); });
+    driveClient->setTokenRefresher(
+        [this](std::function<void(bool)> _done) { authManager->refreshAccessToken(_done); });
+}
+
+QWidget* GoogleDocsManager::Implementation::dialogParent() const
+{
+    return parentWidget.isNull() ? nullptr : parentWidget->topLevelWidget();
+}
+
+void GoogleDocsManager::Implementation::ask(const QString& _title, const QString& _text,
+                                            const QVector<Dialog::ButtonInfo>& _buttons,
+                                            const std::function<void(int)>& _callback)
+{
+    auto dialog = new Dialog(dialogParent());
+    dialog->showDialog(_title, _text, _buttons);
+    QObject::connect(dialog, &Dialog::finished, q,
+                     [dialog, _callback](const Dialog::ButtonInfo& _button) {
+                         dialog->hideDialog();
+                         _callback(_button.id);
+                     });
+    QObject::connect(dialog, &Dialog::disappeared, dialog, &Dialog::deleteLater);
+}
+
+void GoogleDocsManager::Implementation::inform(const QString& _title, const QString& _text)
+{
+    StandardDialog::information(dialogParent(), _title, _text);
+}
+
+void GoogleDocsManager::Implementation::showError(const QString& _title,
+                                                  const GoogleDriveError& _error)
+{
+    QString text;
+    switch (_error.type) {
+    case GoogleDriveError::Type::Network: {
+        text = tr("Can't connect to Google. Check the internet connection and try again.");
+        break;
+    }
+    case GoogleDriveError::Type::Unauthorized: {
+        text = tr("Google sign in has expired. Please sign in again.");
+        break;
+    }
+    case GoogleDriveError::Type::Forbidden: {
+        text = tr("Google denied access to the file. It may be owned by another account or "
+                  "the access was not granted.");
+        break;
+    }
+    case GoogleDriveError::Type::NotFound: {
+        text = tr("The Google Doc was not found. It may have been deleted.");
+        break;
+    }
+    case GoogleDriveError::Type::RateLimited: {
+        text = tr("Google is busy right now. Please try again in a minute.");
+        break;
+    }
+    default: {
+        text = tr("Google returned an error.");
+        break;
+    }
+    }
+    if (!_error.message.isEmpty()) {
+        text += "\n\n" + _error.message;
+    }
+    inform(_title, text);
+}
+
+void GoogleDocsManager::Implementation::withSignIn(const std::function<void()>& _action)
+{
+    if (authManager->isSignedIn()) {
+        _action();
+        return;
+    }
+
+    if (!GoogleAuthManager::isConfigured()) {
+        inform(tr("Google Docs"), tr("Google sign in is not available in this build."));
+        return;
+    }
+
+    static constexpr int cancelButtonId = 0;
+    static constexpr int signInButtonId = 1;
+    ask(tr("Sign in to Google"),
+        tr("The browser will open to sign in with your Google account. Jenny Script gets access "
+           "only to the files it creates in your Google Drive."),
+        { { cancelButtonId, tr("Cancel"), Dialog::RejectButton },
+          { signInButtonId, tr("Sign in"), Dialog::AcceptButton } },
+        [this, _action](int _buttonId) {
+            if (_buttonId != signInButtonId) {
+                return;
+            }
+            actionAfterSignIn = _action;
+            authManager->signIn();
+        });
+}
+
+BusinessLayer::ScreenplayTextModel* GoogleDocsManager::Implementation::screenplayModel(
+    const QUuid& _documentUuid) const
+{
+    return qobject_cast<BusinessLayer::ScreenplayTextModel*>(
+        projectManager->modelForDocument(_documentUuid));
+}
+
+QByteArray GoogleDocsManager::Implementation::exportFountain(
+    BusinessLayer::ScreenplayTextModel* _model) const
+{
+    QTemporaryDir directory;
+    if (!directory.isValid()) {
+        return {};
+    }
+
+    BusinessLayer::ScreenplayExportOptions options;
+    options.filePath = directory.filePath(QStringLiteral("screenplay.fountain"));
+    options.fileFormat = BusinessLayer::ExportFileFormat::Fountain;
+    //
+    // Title page is exported as plain paragraphs, it would come back as action on pull
+    //
+    options.includeTitlePage = false;
+    options.includeText = true;
+    options.includeFolders = true;
+    options.includeInlineNotes = false;
+    options.includeReviewMarks = false;
+    options.showScenesNumbers = false;
+    if (const auto information = _model->informationModel(); information != nullptr) {
+        options.templateId = information->templateId();
+        options.header = information->header();
+        options.footer = information->footer();
+    }
+
+    const BusinessLayer::ScreenplayFountainExporter fountainExporter;
+    const BusinessLayer::ScreenplayExporter& exporter = fountainExporter;
+    exporter.exportTo(_model, options);
+
+    QFile file(options.filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return {};
+    }
+    return file.readAll();
+}
+
+void GoogleDocsManager::Implementation::push(const QUuid& _documentUuid)
+{
+    const auto model = screenplayModel(_documentUuid);
+    if (model == nullptr) {
+        return;
+    }
+    const auto content = exportFountain(model);
+    if (content.isEmpty()) {
+        inform(tr("Push to Google Docs"), tr("Can't export the screenplay as Fountain text."));
+        return;
+    }
+
+    const auto fileId = settingsValue(settingsKey(_documentUuid, kFileIdKey)).toString();
+    if (fileId.isEmpty()) {
+        uploadNew(_documentUuid, content);
+        return;
+    }
+
+    //
+    // Check that the Doc was not edited in Google Docs since the last sync
+    //
+    isBusy = true;
+    driveClient->fileMetadata(fileId, [this, _documentUuid, fileId, content](
+                                          const GoogleDriveFile& _file,
+                                          const GoogleDriveError& _error) {
+        if (_error.type == GoogleDriveError::Type::NotFound || (!_error.isError() && _file.trashed)) {
+            uploadNew(_documentUuid, content);
+            return;
+        }
+        if (_error.isError()) {
+            isBusy = false;
+            showError(tr("Push to Google Docs"), _error);
+            return;
+        }
+
+        driveClient->exportFile(fileId, "text/plain", [this, _documentUuid, fileId, content](
+                                                          const QByteArray& _text,
+                                                          const GoogleDriveError& _error) {
+            if (_error.isError()) {
+                isBusy = false;
+                showError(tr("Push to Google Docs"), _error);
+                return;
+            }
+
+            const auto lastHash = settingsValue(settingsKey(_documentUuid, kTextHashKey)).toString();
+            if (lastHash.isEmpty() || textHash(QString::fromUtf8(_text)) == lastHash) {
+                updateExisting(_documentUuid, fileId, content);
+                return;
+            }
+
+            isBusy = false;
+            static constexpr int cancelButtonId = 0;
+            static constexpr int pullButtonId = 1;
+            static constexpr int overwriteButtonId = 2;
+            ask(tr("The Google Doc was edited"),
+                tr("Somebody changed the Google Doc after the last push or pull. Pull the changes "
+                   "into a new draft first, or overwrite the Google Doc with the text from the "
+                   "app?"),
+                { { cancelButtonId, tr("Cancel"), Dialog::RejectButton },
+                  { overwriteButtonId, tr("Overwrite"), Dialog::AcceptCriticalButton },
+                  { pullButtonId, tr("Pull first"), Dialog::AcceptButton } },
+                [this, _documentUuid, fileId, content](int _buttonId) {
+                    if (_buttonId == pullButtonId) {
+                        pull(_documentUuid);
+                    } else if (_buttonId == overwriteButtonId) {
+                        isBusy = true;
+                        updateExisting(_documentUuid, fileId, content);
+                    }
+                });
+        });
+    });
+}
+
+void GoogleDocsManager::Implementation::uploadNew(const QUuid& _documentUuid,
+                                                  const QByteArray& _content)
+{
+    isBusy = true;
+    const auto model = screenplayModel(_documentUuid);
+    const QString projectName = projectManager->projectName();
+    QString documentName = model != nullptr && model->informationModel() != nullptr
+        ? model->informationModel()->name()
+        : QString();
+    if (documentName.isEmpty()) {
+        documentName = projectName;
+    }
+
+    auto fail = [this](const GoogleDriveError& _error) {
+        isBusy = false;
+        showError(tr("Push to Google Docs"), _error);
+    };
+    driveClient->findOrCreateFolder(
+        kRootFolderName, {},
+        [this, _documentUuid, _content, projectName, documentName,
+         fail](const GoogleDriveFile& _rootFolder, const GoogleDriveError& _error) {
+            if (_error.isError()) {
+                fail(_error);
+                return;
+            }
+            driveClient->findOrCreateFolder(
+                projectName.isEmpty() ? tr("Untitled project") : projectName, _rootFolder.id,
+                [this, _documentUuid, _content, documentName,
+                 fail](const GoogleDriveFile& _projectFolder, const GoogleDriveError& _error) {
+                    if (_error.isError()) {
+                        fail(_error);
+                        return;
+                    }
+                    driveClient->createDocument(
+                        documentName, _projectFolder.id, _content, kTextMimeType,
+                        { { kDocumentUuidProperty, _documentUuid.toString(QUuid::WithoutBraces) } },
+                        [this, _documentUuid, fail](const GoogleDriveFile& _file,
+                                                    const GoogleDriveError& _error) {
+                            if (_error.isError()) {
+                                fail(_error);
+                                return;
+                            }
+                            storeSyncState(_documentUuid, _file, true);
+                        });
+                });
+        });
+}
+
+void GoogleDocsManager::Implementation::updateExisting(const QUuid& _documentUuid,
+                                                       const QString& _fileId,
+                                                       const QByteArray& _content)
+{
+    driveClient->updateDocumentContent(
+        _fileId, _content, kTextMimeType,
+        [this, _documentUuid](const GoogleDriveFile& _file, const GoogleDriveError& _error) {
+            if (_error.isError()) {
+                isBusy = false;
+                showError(tr("Push to Google Docs"), _error);
+                return;
+            }
+            storeSyncState(_documentUuid, _file, true);
+        });
+}
+
+void GoogleDocsManager::Implementation::storeSyncState(const QUuid& _documentUuid,
+                                                       const GoogleDriveFile& _file,
+                                                       bool _showPushedMessage)
+{
+    setSettingsValue(settingsKey(_documentUuid, kFileIdKey), _file.id);
+    setSettingsValue(settingsKey(_documentUuid, kSyncedAtKey), QDateTime::currentDateTimeUtc());
+
+    //
+    // Remember the text as Google Docs returns it after the conversion, it is the base for the
+    // next "edited in Google Docs" check
+    //
+    driveClient->exportFile(
+        _file.id, "text/plain",
+        [this, _documentUuid, _file, _showPushedMessage](const QByteArray& _text,
+                                                         const GoogleDriveError& _error) {
+            isBusy = false;
+            if (!_error.isError()) {
+                setSettingsValue(settingsKey(_documentUuid, kTextHashKey),
+                                 textHash(QString::fromUtf8(_text)));
+            }
+            if (!_showPushedMessage) {
+                return;
+            }
+
+            static constexpr int closeButtonId = 0;
+            static constexpr int openButtonId = 1;
+            ask(tr("Pushed to Google Docs"),
+                tr("The screenplay is in the Google Doc \"%1\" (folder \"%2\" in your Google "
+                   "Drive). Apply Fountainize in Google Docs to format it.")
+                    .arg(_file.name, kRootFolderName),
+                { { closeButtonId, tr("Close"), Dialog::RejectButton },
+                  { openButtonId, tr("Open in browser"), Dialog::AcceptButton } },
+                [_file](int _buttonId) {
+                    if (_buttonId == openButtonId) {
+                        QDesktopServices::openUrl(documentUrl(_file.id));
+                    }
+                });
+        });
+}
+
+void GoogleDocsManager::Implementation::pull(const QUuid& _documentUuid)
+{
+    const auto fileId = settingsValue(settingsKey(_documentUuid, kFileIdKey)).toString();
+    if (fileId.isEmpty()) {
+        inform(tr("Pull from Google Docs"),
+               tr("This screenplay was not pushed to Google Docs yet. Push it first."));
+        return;
+    }
+
+    isBusy = true;
+    driveClient->exportFile(fileId, "text/plain", [this, _documentUuid](
+                                                      const QByteArray& _text,
+                                                      const GoogleDriveError& _error) {
+        isBusy = false;
+        if (_error.isError()) {
+            showError(tr("Pull from Google Docs"), _error);
+            return;
+        }
+
+        const QString text = QString::fromUtf8(_text);
+        //
+        // Leading new line prevents the first line from being parsed as a title page key
+        //
+        BusinessLayer::ScreenplayFountainImporter importer;
+        const auto screenplay = importer.screenplayText("\n" + text);
+        if (screenplay.text.isEmpty()) {
+            inform(tr("Pull from Google Docs"), tr("The Google Doc is empty."));
+            return;
+        }
+
+        const auto draftName = tr("Google Docs %1")
+                                   .arg(QDateTime::currentDateTime().toString("dd/MM HH:mm"));
+        projectManager->addDocumentDraft(_documentUuid, draftName, screenplay.text.toUtf8());
+        setSettingsValue(settingsKey(_documentUuid, kTextHashKey), textHash(text));
+        setSettingsValue(settingsKey(_documentUuid, kSyncedAtKey), QDateTime::currentDateTimeUtc());
+        inform(tr("Pull from Google Docs"),
+               tr("The text from Google Docs was added as the new draft \"%1\". The current text "
+                  "was not changed.")
+                   .arg(draftName));
+    });
+}
+
+void GoogleDocsManager::Implementation::openInBrowser(const QUuid& _documentUuid)
+{
+    const auto fileId = settingsValue(settingsKey(_documentUuid, kFileIdKey)).toString();
+    if (fileId.isEmpty()) {
+        inform(tr("Open in Google Docs"),
+               tr("This screenplay was not pushed to Google Docs yet. Push it first."));
+        return;
+    }
+    QDesktopServices::openUrl(documentUrl(fileId));
+}
+
+
+// ****
+
+
+GoogleDocsManager::GoogleDocsManager(QObject* _parent, QWidget* _parentWidget,
+                                     ProjectManager* _projectManager)
+    : QObject(_parent)
+    , d(new Implementation(this, _parentWidget, _projectManager))
+{
+    connect(d->authManager, &GoogleAuthManager::signedInChanged, this, [this](bool _isSignedIn) {
+        if (_isSignedIn && d->actionAfterSignIn) {
+            const auto action = std::exchange(d->actionAfterSignIn, {});
+            action();
+        }
+    });
+    connect(d->authManager, &GoogleAuthManager::signInFailed, this, [this](const QString& _error) {
+        d->actionAfterSignIn = {};
+        d->inform(tr("Sign in to Google"), tr("Google sign in failed.") + "\n\n" + _error);
+    });
+    connect(d->authManager, &GoogleAuthManager::reauthenticationRequired, this, [this] {
+        d->inform(tr("Sign in to Google"),
+                  tr("Google sign in has expired. You will be asked to sign in again on the next "
+                     "push or pull."));
+    });
+
+    d->authManager->restoreSession();
+}
+
+GoogleDocsManager::~GoogleDocsManager() = default;
+
+GoogleAuthManager* GoogleDocsManager::authManager() const
+{
+    return d->authManager;
+}
+
+void GoogleDocsManager::handleAction(int _action, const QUuid& _documentUuid)
+{
+    if (d->isBusy) {
+        d->inform(tr("Google Docs"), tr("Previous Google Docs operation is still in progress."));
+        return;
+    }
+
+    switch (_action) {
+    case Push: {
+        d->withSignIn([this, _documentUuid] { d->push(_documentUuid); });
+        break;
+    }
+    case Pull: {
+        d->withSignIn([this, _documentUuid] { d->pull(_documentUuid); });
+        break;
+    }
+    case OpenInBrowser: {
+        d->openInBrowser(_documentUuid);
+        break;
+    }
+    default: {
+        break;
+    }
+    }
+}
+
+} // namespace ManagementLayer

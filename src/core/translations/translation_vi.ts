@@ -4755,6 +4755,18 @@ Các tệp sau sẽ không được nhập:
             <source>Statistics</source>
             <translation>Thống kê</translation>
         </message>
+        <message>
+            <source>Push to Google Docs</source>
+            <translation>Đẩy lên Google Docs</translation>
+        </message>
+        <message>
+            <source>Pull from Google Docs</source>
+            <translation>Kéo về từ Google Docs</translation>
+        </message>
+        <message>
+            <source>Open in Google Docs</source>
+            <translation>Mở trên Google Docs</translation>
+        </message>
     </context>
     <context>
         <name>ManagementLayer::ProjectsManager</name>
@@ -22840,6 +22852,156 @@ Nếu bạn làm việc liên tục, dự án được lưu mỗi 3 phút.</tran
             <location filename="../../3rd_party/webloader/src/WebLoader.cpp" line="393" />
             <source>Sorry, we have some error while loading. Error is: %1</source>
             <translation>Rất tiếc, đã xảy ra lỗi khi tải. Chi tiết lỗi: %1</translation>
+        </message>
+    </context>
+    <context>
+        <name>ManagementLayer::GoogleAuthManager</name>
+        <message>
+            <source>Google sign in failed (error %1)</source>
+            <translation>Đăng nhập Google thất bại (lỗi %1)</translation>
+        </message>
+        <message>
+            <source>Google sign in is not available in this build</source>
+            <translation>Bản build này chưa bật đăng nhập Google</translation>
+        </message>
+        <message>
+            <source>Can't start the local server for Google sign in</source>
+            <translation>Không mở được máy chủ cục bộ để đăng nhập Google</translation>
+        </message>
+        <message>
+            <source>Signed in to Google. You can close this page and return to Jenny Script.</source>
+            <translation>Đã đăng nhập Google. Bạn có thể đóng trang này và quay lại Jenny Script.</translation>
+        </message>
+    </context>
+    <context>
+        <name>ManagementLayer::GoogleDocsManager</name>
+        <message>
+            <source>Can't connect to Google. Check the internet connection and try again.</source>
+            <translation>Không kết nối được tới Google. Kiểm tra mạng rồi thử lại.</translation>
+        </message>
+        <message>
+            <source>Google sign in has expired. Please sign in again.</source>
+            <translation>Phiên đăng nhập Google đã hết hạn. Vui lòng đăng nhập lại.</translation>
+        </message>
+        <message>
+            <source>Google denied access to the file. It may be owned by another account or the access was not granted.</source>
+            <translation>Google từ chối truy cập file. Có thể file thuộc tài khoản khác hoặc chưa được cấp quyền.</translation>
+        </message>
+        <message>
+            <source>The Google Doc was not found. It may have been deleted.</source>
+            <translation>Không tìm thấy Google Doc. Có thể nó đã bị xóa.</translation>
+        </message>
+        <message>
+            <source>Google is busy right now. Please try again in a minute.</source>
+            <translation>Google đang bận. Vui lòng thử lại sau một phút.</translation>
+        </message>
+        <message>
+            <source>Google returned an error.</source>
+            <translation>Google báo lỗi.</translation>
+        </message>
+        <message>
+            <source>Google Docs</source>
+            <translation>Google Docs</translation>
+        </message>
+        <message>
+            <source>Google sign in is not available in this build.</source>
+            <translation>Bản build này chưa bật đăng nhập Google.</translation>
+        </message>
+        <message>
+            <source>Sign in to Google</source>
+            <translation>Đăng nhập Google</translation>
+        </message>
+        <message>
+            <source>The browser will open to sign in with your Google account. Jenny Script gets access only to the files it creates in your Google Drive.</source>
+            <translation>Trình duyệt sẽ mở để bạn đăng nhập tài khoản Google. Jenny Script chỉ được truy cập những file do chính nó tạo trong Google Drive của bạn.</translation>
+        </message>
+        <message>
+            <source>Cancel</source>
+            <translation>Hủy</translation>
+        </message>
+        <message>
+            <source>Sign in</source>
+            <translation>Đăng nhập</translation>
+        </message>
+        <message>
+            <source>Push to Google Docs</source>
+            <translation>Đẩy lên Google Docs</translation>
+        </message>
+        <message>
+            <source>Can't export the screenplay as Fountain text.</source>
+            <translation>Không xuất được kịch bản ra dạng Fountain.</translation>
+        </message>
+        <message>
+            <source>The Google Doc was edited</source>
+            <translation>Google Doc đã bị sửa</translation>
+        </message>
+        <message>
+            <source>Somebody changed the Google Doc after the last push or pull. Pull the changes into a new draft first, or overwrite the Google Doc with the text from the app?</source>
+            <translation>Có người đã sửa Google Doc sau lần đẩy hoặc kéo gần nhất. Bạn muốn kéo các thay đổi về thành bản nháp mới trước, hay ghi đè Google Doc bằng nội dung trong app?</translation>
+        </message>
+        <message>
+            <source>Overwrite</source>
+            <translation>Ghi đè</translation>
+        </message>
+        <message>
+            <source>Pull first</source>
+            <translation>Kéo về trước</translation>
+        </message>
+        <message>
+            <source>Untitled project</source>
+            <translation>Dự án chưa đặt tên</translation>
+        </message>
+        <message>
+            <source>Pushed to Google Docs</source>
+            <translation>Đã đẩy lên Google Docs</translation>
+        </message>
+        <message>
+            <source>The screenplay is in the Google Doc "%1" (folder "%2" in your Google Drive). Apply Fountainize in Google Docs to format it.</source>
+            <translation>Kịch bản nằm trong Google Doc "%1" (thư mục "%2" trong Google Drive của bạn). Chạy Fountainize trên Google Docs để dàn trang.</translation>
+        </message>
+        <message>
+            <source>Close</source>
+            <translation>Đóng</translation>
+        </message>
+        <message>
+            <source>Open in browser</source>
+            <translation>Mở trên trình duyệt</translation>
+        </message>
+        <message>
+            <source>Pull from Google Docs</source>
+            <translation>Kéo về từ Google Docs</translation>
+        </message>
+        <message>
+            <source>This screenplay was not pushed to Google Docs yet. Push it first.</source>
+            <translation>Kịch bản này chưa được đẩy lên Google Docs. Hãy đẩy lên trước.</translation>
+        </message>
+        <message>
+            <source>The Google Doc is empty.</source>
+            <translation>Google Doc đang trống.</translation>
+        </message>
+        <message>
+            <source>Google Docs %1</source>
+            <translation>Google Docs %1</translation>
+        </message>
+        <message>
+            <source>The text from Google Docs was added as the new draft "%1". The current text was not changed.</source>
+            <translation>Nội dung từ Google Docs đã được thêm thành bản nháp mới "%1". Bản đang có không bị thay đổi.</translation>
+        </message>
+        <message>
+            <source>Open in Google Docs</source>
+            <translation>Mở trên Google Docs</translation>
+        </message>
+        <message>
+            <source>Google sign in failed.</source>
+            <translation>Đăng nhập Google thất bại.</translation>
+        </message>
+        <message>
+            <source>Google sign in has expired. You will be asked to sign in again on the next push or pull.</source>
+            <translation>Phiên đăng nhập Google đã hết hạn. Lần đẩy hoặc kéo tiếp theo, app sẽ hỏi bạn đăng nhập lại.</translation>
+        </message>
+        <message>
+            <source>Previous Google Docs operation is still in progress.</source>
+            <translation>Thao tác Google Docs trước đó vẫn đang chạy.</translation>
         </message>
     </context>
 </TS>

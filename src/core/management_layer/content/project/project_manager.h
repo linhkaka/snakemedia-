@@ -238,7 +238,19 @@ public:
     QString projectLogline() const;
     QPixmap projectCover() const;
 
+    /**
+     * @brief Jenny Script fork: access to documents for the Google Docs bridge
+     */
+    BusinessLayer::AbstractModel* modelForDocument(const QUuid& _documentUuid) const;
+    void addDocumentDraft(const QUuid& _documentUuid, const QString& _name,
+                          const QByteArray& _content);
+
 signals:
+    /**
+     * @brief Jenny Script fork: Google Docs action chosen in the navigator context menu
+     */
+    void googleDocsActionRequested(int _action, const QUuid& _documentUuid);
+
     /**
      * @brief Запрос на отображение меню
      */

@@ -19,6 +19,9 @@
 #ifdef CLOUD_SERVICE_MANAGER
 #include <cloud/cloud_service_manager.h>
 #endif
+#ifdef GOOGLE_INTEGRATION
+#include "content/google/google_docs_manager.h"
+#endif
 
 // #define PRINT_DOCUMENT_HISTORY
 #ifdef PRINT_DOCUMENT_HISTORY
@@ -429,6 +432,9 @@ public:
     QScopedPointer<SettingsManager> settingsManager;
     QScopedPointer<WritingSessionManager> writingSessionManager;
     QScopedPointer<NotificationsManager> notificationsManager;
+#ifdef GOOGLE_INTEGRATION
+    QScopedPointer<GoogleDocsManager> googleDocsManager;
+#endif
 #ifdef CLOUD_SERVICE_MANAGER
     QScopedPointer<CloudServiceManager> cloudServiceManager;
 #endif
@@ -479,6 +485,9 @@ ApplicationManager::Implementation::Implementation(ApplicationManager* _q)
           new SettingsManager(nullptr, applicationView, pluginsBuilder, shortcutsManager.data()))
     , writingSessionManager(new WritingSessionManager(nullptr, applicationView->view()))
     , notificationsManager(new NotificationsManager)
+#ifdef GOOGLE_INTEGRATION
+    , googleDocsManager(new GoogleDocsManager(nullptr, applicationView, projectManager.data()))
+#endif
 #ifdef CLOUD_SERVICE_MANAGER
     , cloudServiceManager(new CloudServiceManager)
 #endif
@@ -3398,6 +3407,10 @@ void ApplicationManager::initConnections()
             });
     connect(d->projectManager.data(), &ProjectManager::exportCurrentDocumentRequested, this,
             [this] { d->exportCurrentDocument(); });
+#ifdef GOOGLE_INTEGRATION
+    connect(d->projectManager.data(), &ProjectManager::googleDocsActionRequested,
+            d->googleDocsManager.data(), &GoogleDocsManager::handleAction);
+#endif
     connect(d->projectManager.data(), &ProjectManager::importRequested, d->importManager.data(),
             &ImportManager::import);
     connect(d->projectManager.data(), &ProjectManager::importFileRequested, d->importManager.data(),
