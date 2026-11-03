@@ -126,6 +126,24 @@ bool StructureProxyModel::filterAcceptsRow(int _sourceRow, const QModelIndex& _s
         }
     }
 
+    //
+    // Jenny Script fork: statistics plugins are private upstream modules and are not built,
+    // so their documents are hidden (the documents themselves are kept in the project)
+    //
+    switch (item->type()) {
+    case Domain::DocumentObjectType::ScreenplayStatistics:
+    case Domain::DocumentObjectType::ScreenplaySeriesStatistics:
+    case Domain::DocumentObjectType::ComicBookStatistics:
+    case Domain::DocumentObjectType::AudioplayStatistics:
+    case Domain::DocumentObjectType::StageplayStatistics:
+    case Domain::DocumentObjectType::NovelStatistics: {
+        return false;
+    }
+    default: {
+        break;
+    }
+    }
+
     switch (item->type()) {
 
     //
