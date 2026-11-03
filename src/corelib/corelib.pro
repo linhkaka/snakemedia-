@@ -263,6 +263,7 @@ SOURCES += \
     business_layer/export/worlds/worlds_pdf_exporter.cpp \
     business_layer/import/abstract_document_importer.cpp \
     business_layer/import/abstract_fountain_importer.cpp \
+    business_layer/import/fountain_text_normalizer.cpp \
     business_layer/import/abstract_markdown_importer.cpp \
     business_layer/import/audioplay/audioplay_fountain_importer.cpp \
     business_layer/import/comic_book/comic_book_fountain_importer.cpp \
@@ -641,6 +642,7 @@ HEADERS += \
     business_layer/export/worlds/worlds_pdf_exporter.h \
     business_layer/import/abstract_document_importer.h \
     business_layer/import/abstract_fountain_importer.h \
+    business_layer/import/fountain_text_normalizer.h \
     business_layer/import/abstract_importer.h \
     business_layer/import/abstract_markdown_importer.h \
     business_layer/import/audioplay/abstract_audioplay_importer.h \

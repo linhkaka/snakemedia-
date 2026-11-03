@@ -98,6 +98,18 @@ jobs:
           make -j$(nproc)
           ./tst_google_drive_client
 
+      - name: Build and run Fountain import tests
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          mkdir -p work/fountain-import-tests
+          cd work/fountain-import-tests
+          qmake ../../tests/fountain_import/fountain_import.pro CONFIG+=release
+          make -j$(nproc)
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/src/_build:$GITHUB_WORKSPACE/src/_build/libs${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          ./tst_fountain_import
+
   windows:
     name: Windows x64 (portable zip)
     runs-on: windows-2022

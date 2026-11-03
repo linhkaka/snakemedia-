@@ -1,5 +1,7 @@
 #include "abstract_fountain_importer.h"
 
+#include "fountain_text_normalizer.h"
+
 #include <business_layer/import/import_options.h>
 #include <business_layer/model/text/text_model_xml.h>
 #include <business_layer/templates/text_template.h>
@@ -524,7 +526,7 @@ AbstractScreenplayImporter::Documents AbstractFountainImporter::importDocuments(
     //
     // Читаем plain text
     //
-    QString scriptText = fountainFile.readAll();
+    QString scriptText = FountainTextNormalizer::normalize(fountainFile.readAll());
 
     //
     // Сформируем список строк, содержащий текст сценария
@@ -582,6 +584,12 @@ AbstractScreenplayImporter::Documents AbstractFountainImporter::importDocuments(
 
         switch (paragraphs[i][0].toLatin1()) {
         case '.': {
+            //
+            // Jenny Script fork: a leading ellipsis is not a forced scene heading
+            //
+            if (paragraphs[i].startsWith("..")) {
+                break;
+            }
             blockType = TextParagraphType::SceneHeading;
             //
             // Номера сцен игнорируем
@@ -744,7 +752,7 @@ QString AbstractFountainImporter::documentText(const QString& _text, bool _keepS
     QVector<QString> paragraphs;
     bool isTitle = false;
     bool isFirstLine = true;
-    for (const auto& paragraph : QString(_text).remove('\r').split("\n")) {
+    for (const auto& paragraph : FountainTextNormalizer::normalize(_text).split("\n")) {
         const auto paragraphText = TextHelper::simplified(paragraph);
 
         //
@@ -1048,6 +1056,13 @@ TextParagraphType AbstractFountainImporter::blockType(QString& _paragraphText) c
     TextParagraphType blockType = d->defaultBlockType;
     switch (_paragraphText[0].toLatin1()) {
     case '.': {
+        //
+        // Jenny Script fork: a leading ellipsis is not a forced scene heading
+        //
+        if (_paragraphText.startsWith("..")) {
+            blockType = TextParagraphType::Undefined;
+            break;
+        }
         blockType = TextParagraphType::SceneHeading;
         _paragraphText.remove(0, 1);
         movePreviousTypes(0, 1);

@@ -62,3 +62,5 @@ Keep this list up to date: these are the files to check when merging upstream.
 | `src/core/ui/settings/language_dialog.cpp`, `src/core/ui/settings/settings_view.cpp` | "Tiếng Việt" in the language list |
 | `src/core/ui/onboarding/onboarding_navigator.cpp`, `src/core/ui/onboarding/onboarding_view.cpp` | "Tiếng Việt" in the first-run language list |
 | `src/starc.pro`, `src/core/translations.qrc` | `translation_vi.ts` / `translation_vi.qm` registered |
+| `src/corelib/business_layer/import/abstract_fountain_importer.cpp` | input goes through `FountainTextNormalizer` (scene numbers, Vietnamese headings, Google Docs characters); a leading ellipsis (`..`) is no longer a forced scene heading |
+| `src/corelib/corelib.pro` | `fountain_text_normalizer.{h,cpp}` registered |
