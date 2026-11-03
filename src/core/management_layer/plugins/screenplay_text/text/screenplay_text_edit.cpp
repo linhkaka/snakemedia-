@@ -1093,10 +1093,15 @@ void ScreenplayTextEdit::paintEvent(QPaintEvent* _event)
             // Celtx (only in the editor, it is not exported)
             //
             if (blockType == TextParagraphType::SceneHeading) {
+                //
+                // ... from the first letter of the heading (cursor rect of the block start) to the
+                //     right edge of the text area
+                //
                 const qreal bandPadding = DesignSystem::layout().px2();
-                const QRectF band(leftDelta + textLeft + spaceBetweenSceneNumberAndText,
-                                  cursorR.top() - bandPadding,
-                                  textRight - textLeft - 2 * spaceBetweenSceneNumberAndText,
+                const qreal bandLeft = cursorR.left() - DesignSystem::layout().px4();
+                const qreal bandRight
+                    = leftDelta + textRight - spaceBetweenSceneNumberAndText + bandPadding;
+                const QRectF band(bandLeft, cursorR.top() - bandPadding, bandRight - bandLeft,
                                   cursorREnd.bottom() - cursorR.top() + 2 * bandPadding);
                 auto bandColor = palette().text().color();
                 bandColor.setAlphaF(0.12);
