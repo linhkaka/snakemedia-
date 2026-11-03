@@ -22,6 +22,8 @@ versionAtLeast(QT_VERSION, 6.9.0):qtHaveModule(networkauth) {
     }
 
     include($$GOOGLE_SRC_ROOT/3rd_party/qtkeychain/qtkeychain.pri)
+    # qtkeychain.pri adds the parent of the submodule, the headers are in qtkeychain/qtkeychain/
+    INCLUDEPATH += $$GOOGLE_SRC_ROOT/3rd_party/qtkeychain
 
     HEADERS += \
         $$PWD/google_auth_manager.h \
