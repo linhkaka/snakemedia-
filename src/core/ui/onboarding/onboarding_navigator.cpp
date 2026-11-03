@@ -345,12 +345,16 @@ void OnboardingNavigator::Implementation::initUiPage()
         //
         // Если умеем в системный язык, запомним его
         //
-        if (QLocale().system().language() == _language) {
+        if (QLocale().system().language() == _language && defaultLanguage == nullptr) {
             defaultLanguage = languageItem;
         }
 
         return languageItem;
     };
+    //
+    // Jenny Script fork: Vietnamese goes first and is selected by default
+    //
+    defaultLanguage = addLanguage("Tiếng Việt", QLocale::Vietnamese, 100);
     addLanguage("Azərbaycan", QLocale::Azerbaijani, 73);
     addLanguage("Беларуский", QLocale::Belarusian, 39);
     addLanguage("Català", QLocale::Catalan, 64);
@@ -375,7 +379,6 @@ void OnboardingNavigator::Implementation::initUiPage()
     addLanguage("Svenska", QLocale::Swedish, 32);
     addLanguage("Türkçe", QLocale::Turkish, 85);
     addLanguage("Українська", QLocale::Ukrainian, 92);
-    addLanguage("Tiếng Việt", QLocale::Vietnamese, 100);
     addLanguage("اَلْعَرَبِيَّةُ", QLocale::Arabic, 74);
     addLanguage("فارسی", QLocale::Persian, 50);
     addLanguage("עִבְרִית", QLocale::Hebrew, 73);

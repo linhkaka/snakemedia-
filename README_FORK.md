@@ -65,3 +65,4 @@ Keep this list up to date: these are the files to check when merging upstream.
 | `src/corelib/business_layer/import/abstract_fountain_importer.cpp` | input goes through `FountainTextNormalizer` (scene numbers, Vietnamese headings, Google Docs characters); a leading ellipsis (`..`) is no longer a forced scene heading |
 | `src/corelib/corelib.pro` | `fountain_text_normalizer.{h,cpp}` registered |
 | `src/corelib/business_layer/model/structure/structure_proxy_model.cpp` | statistics documents hidden in the navigator (their plugins are private) |
+| `application_manager.cpp`, `onboarding_navigator.cpp`, `onboarding_view.cpp`, `language_dialog.cpp` | Vietnamese is the default and first language; onboarding saves the chosen language instead of the system one (upstream bug) |

@@ -1327,8 +1327,11 @@ void ApplicationManager::Implementation::setTranslation(QLocale::Language _langu
     //
     // Определим файл перевода
     //
+    //
+    // Jenny Script fork: Vietnamese is the default language instead of the system one
+    //
     const QLocale::Language currentLanguage
-        = _language != QLocale::AnyLanguage ? _language : QLocale::system().language();
+        = _language != QLocale::AnyLanguage ? _language : QLocale::Vietnamese;
     QString translation;
     switch (currentLanguage) {
     default:
@@ -3266,7 +3269,11 @@ void ApplicationManager::initConnections()
             });
     connect(d->onboardingManager.data(), &OnboardingManager::finished, this, [this] {
         setSettingsValue(DataStorageLayer::kApplicationConfiguredKey, true);
-        setSettingsValue(DataStorageLayer::kApplicationLanguagedKey, QLocale::system().language());
+        //
+        // Jenny Script fork: save the language chosen in onboarding (it is applied with
+        // QLocale::setDefault), not the system one
+        //
+        setSettingsValue(DataStorageLayer::kApplicationLanguagedKey, QLocale().language());
         setSettingsValue(DataStorageLayer::kApplicationThemeKey,
                          static_cast<int>(Ui::DesignSystem::theme()));
         if (Ui::DesignSystem::theme() == Ui::ApplicationTheme::Custom) {

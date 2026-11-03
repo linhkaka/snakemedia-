@@ -233,6 +233,7 @@ LanguageDialog::LanguageDialog(QWidget* _parent)
         }
     };
     buildFocusChain({
+        d->vietnamese,
         d->azerbaijani, d->belarusian, d->catalan,
         d->danish,      d->german,     d->english,
         d->spanish,     d->greek,      d->french,
@@ -243,7 +244,7 @@ LanguageDialog::LanguageDialog(QWidget* _parent)
         d->swedish,     d->turkish,    d->ukrainian,
         d->arabic,      d->chinese,    d->hebrew,
         d->hindi,       d->persian,    d->tamil,
-        d->telugu,      d->korean,     d->vietnamese,
+        d->telugu,      d->korean,
     });
 
     int row = 0;
@@ -252,6 +253,7 @@ LanguageDialog::LanguageDialog(QWidget* _parent)
     auto addButton = [this, &row, &column](PercentRadioButton* _button) {
         contentsLayout()->addWidget(_button, row++, column);
     };
+    addButton(d->vietnamese);
     addButton(d->azerbaijani);
     addButton(d->belarusian);
     addButton(d->catalan);
@@ -284,7 +286,6 @@ LanguageDialog::LanguageDialog(QWidget* _parent)
     addButton(d->swedish);
     addButton(d->turkish);
     addButton(d->ukrainian);
-    addButton(d->vietnamese);
     maximumRow = std::max(row, maximumRow);
     //
     row = 0;

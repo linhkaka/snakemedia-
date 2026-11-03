@@ -84,7 +84,8 @@ void OnboardingView::Implementation::initLanguagePage()
                                      int _percent) {
         PercentRadioButton* languageButton = new PercentRadioButton(languagePage, _percent);
         languageButton->setText(_name);
-        languageButton->setChecked(QLocale().system().language() == _language);
+        // Jenny Script fork: Vietnamese is selected by default
+        languageButton->setChecked(_language == QLocale::Vietnamese);
         QObject::connect(
             languageButton, &PercentRadioButton::checkedChanged, q,
             [this, _language, languageButton](bool _checked) {
@@ -171,6 +172,7 @@ void OnboardingView::Implementation::initLanguagePage()
         }
     };
     buildFocusChain({
+        vietnameseLanguage,
         azerbaijaniLanguage,
         belarusianLanguage,
         catalanLanguage,
@@ -204,7 +206,6 @@ void OnboardingView::Implementation::initLanguagePage()
         tamilLanguage,
         teluguLanguage,
         koreanLanguage,
-        vietnameseLanguage,
     });
 
     languageTranslationProgressLink = new Body1LinkLabel(languagePage);
@@ -229,6 +230,7 @@ void OnboardingView::Implementation::initLanguagePage()
     languagePageLayout->setContentsMargins({});
     int row = 0;
     languagePageLayout->addWidget(languageTitleLabel, row++, 0, 1, 5);
+    languagePageLayout->addWidget(vietnameseLanguage, row++, 0);
     languagePageLayout->addWidget(azerbaijaniLanguage, row++, 0);
     languagePageLayout->addWidget(belarusianLanguage, row++, 0);
     languagePageLayout->addWidget(catalanLanguage, row++, 0);
@@ -256,7 +258,6 @@ void OnboardingView::Implementation::initLanguagePage()
     languagePageLayout->addWidget(tagalogLanguage, rowForThirdColumn++, 2);
     languagePageLayout->addWidget(turkishLanguage, rowForThirdColumn++, 2);
     languagePageLayout->addWidget(ukrainianLanguage, rowForThirdColumn++, 2);
-    languagePageLayout->addWidget(vietnameseLanguage, rowForThirdColumn++, 2);
     int rowForFifthColumn = 1;
     languagePageLayout->addWidget(arabicLanguage, rowForFifthColumn++, 3);
     languagePageLayout->addWidget(chineseLanguage, rowForFifthColumn++, 3);
