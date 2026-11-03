@@ -7,13 +7,21 @@
 
 namespace {
 //
-// Jenny Script fork: industry standard revision order (WGA / Final Draft / Celtx):
-// Blue, Pink, Yellow, Green, Goldenrod, Buff, Salmon, Cherry, Tan. Shades are tuned to stay
-// readable as text color on both light and dark themes.
+// Jenny Script fork: industry standard revision page colors (WGA / Final Draft / Celtx order):
+// Blue, Pink, Yellow, Green, Goldenrod, Buff, Salmon, Cherry, Tan. Revised text is highlighted
+// with the page color like in Celtx...
 //
 const QVector<QColor> kRevisionColors = {
-    "#3d7cf0", "#f062a8", "#d4b000", "#2ea043", "#daa520",
-    "#c9a66b", "#fa8072", "#de3163", "#d2b48c",
+    "#99e6ff", "#ffb3e6", "#fff59d", "#b4f5a8", "#ffd966",
+    "#f5e6c4", "#ffb399", "#ff8a8a", "#d9bfa6",
+};
+//
+// ... and written with a dark tone of the same color, which identifies the revision level of the
+// text (margin marks and PDF export read the text color)
+//
+const QVector<QColor> kRevisionTextColors = {
+    "#0b4a6f", "#7a1f5c", "#5c5200", "#1f5c1a", "#6b4c00",
+    "#5c4a26", "#7a3020", "#7a1f1f", "#4d3626",
 };
 //
 // Upstream palette, same order, kept to recognize marks made before the fork changed colors
@@ -199,8 +207,20 @@ QColor ColorHelper::revisionColor(int _level)
     return kRevisionColors.at(_level);
 }
 
+QColor ColorHelper::revisionTextColor(int _level)
+{
+    while (_level >= kRevisionTextColors.size()) {
+        _level -= kRevisionTextColors.size();
+    }
+    return kRevisionTextColors.at(_level);
+}
+
 int ColorHelper::revisionLevel(const QColor& _color)
 {
-    const auto level = kRevisionColors.indexOf(_color);
-    return level != -1 ? level : kLegacyRevisionColors.indexOf(_color);
+    for (const auto& colors : { kRevisionColors, kRevisionTextColors, kLegacyRevisionColors }) {
+        if (const auto level = colors.indexOf(_color); level != -1) {
+            return level;
+        }
+    }
+    return -1;
 }

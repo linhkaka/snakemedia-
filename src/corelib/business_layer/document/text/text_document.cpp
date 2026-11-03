@@ -2029,14 +2029,29 @@ void TextDocument::addReviewMark(const QColor& _textColor, const QColor& _backgr
                                  const QString& _comment, bool _isRevision, bool _isAddition,
                                  bool _isRemoval, const TextCursor& _cursor)
 {
-    TextModelTextItem::ReviewMark newReviewMark;
-    if (_textColor.isValid()) {
-        newReviewMark.textColor = _textColor;
+    //
+    // Jenny Script fork: revised text is highlighted with the revision page color, its text gets
+    // a dark tone of the same color which identifies the revision level
+    //
+    QColor textColor = _textColor;
+    QColor backgroundColor = _backgroundColor;
+    if (_isRevision) {
+        const auto level
+            = ColorHelper::revisionLevel(textColor.isValid() ? textColor : backgroundColor);
+        if (level != -1) {
+            textColor = ColorHelper::revisionTextColor(level);
+            backgroundColor = ColorHelper::revisionColor(level);
+        }
     }
-    if (_backgroundColor.isValid()) {
-        newReviewMark.backgroundColor = _backgroundColor;
-        if (!_textColor.isValid()) {
-            newReviewMark.textColor = ColorHelper::contrasted(_backgroundColor);
+
+    TextModelTextItem::ReviewMark newReviewMark;
+    if (textColor.isValid()) {
+        newReviewMark.textColor = textColor;
+    }
+    if (backgroundColor.isValid()) {
+        newReviewMark.backgroundColor = backgroundColor;
+        if (!textColor.isValid()) {
+            newReviewMark.textColor = ColorHelper::contrasted(backgroundColor);
         }
     }
 

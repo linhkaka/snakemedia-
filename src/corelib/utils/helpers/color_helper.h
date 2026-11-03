@@ -76,6 +76,11 @@ public:
     static QColor revisionColor(int _level);
 
     /**
+     * @brief Jenny Script fork: text color of the revised text by revision level
+     */
+    static QColor revisionTextColor(int _level);
+
+    /**
      * @brief Уровень ревизии по цвету
      */
     static int revisionLevel(const QColor& _color);
