@@ -104,6 +104,11 @@ void OnboardingManager::completeSignIn()
     d->navigator->showAccountPage();
 }
 
+void OnboardingManager::showGoogleAccount(const QString& _email)
+{
+    d->navigator->showGoogleAccount(_email);
+}
+
 void OnboardingManager::setAccountInfo(const Domain::AccountInfo& _accountInfo)
 {
     d->navigator->setAccountInfo(_accountInfo);

@@ -456,6 +456,13 @@ void OnboardingNavigator::Implementation::initSignUpPage()
     signInSignInButton->hide();
     signInResendCodeButton->setContained(true);
     signInResendCodeButton->hide();
+#ifdef GOOGLE_INTEGRATION
+    //
+    // Jenny Script fork: optional Google sign in instead of the STARC cloud account
+    //
+    signInEmail->hide();
+    signInSignInButton->show();
+#endif
 
     auto pageLayout = UiHelper::makeVBoxLayout();
     pageLayout->addWidget(signInTitle);
@@ -716,6 +723,10 @@ OnboardingNavigator::OnboardingNavigator(QWidget* _parent)
         d->signInSignInButton->hide();
     });
     connect(d->signInSignInButton, &Button::clicked, this, [this] {
+#ifdef GOOGLE_INTEGRATION
+        emit signInPressed();
+        return;
+#endif
         if (!EmailValidator::isValid(d->signInEmail->text())) {
             d->signInEmail->setError(tr("Email invalid"));
             return;
@@ -895,6 +906,13 @@ void OnboardingNavigator::setAuthorizationError(const QString& _error)
     d->signInAuthorizationError->show();
 }
 
+void OnboardingNavigator::showGoogleAccount(const QString& _email)
+{
+    d->signInSignInButton->hide();
+    d->signInSubtitle->setText(tr("Signed in as %1").arg(_email));
+    d->signInContinueButton->setText(tr("Continue"));
+}
+
 void OnboardingNavigator::showAccountPage()
 {
     //
@@ -952,6 +970,12 @@ void OnboardingNavigator::updateTranslations()
     d->signInSignInButton->setText(tr("Sign up"));
     d->signInResendCodeButton->setText(tr("Send code again"));
     d->signInContinueButton->setText(tr("Continue without sign in"));
+#ifdef GOOGLE_INTEGRATION
+    d->signInTitle->setText(tr("Sign in with Google to push screenplays\nto Google Docs"));
+    d->signInSubtitle->setText(tr("It is optional: you can sign in later in the settings or on "
+                                  "the first push to Google Docs"));
+    d->signInSignInButton->setText(tr("Sign in with Google"));
+#endif
 
     d->accountTitle->setText(tr("Set up your account"));
     d->accountSubtitle->setText(tr("Personalize your workspace"));

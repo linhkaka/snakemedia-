@@ -3109,6 +3109,13 @@ void SettingsView::showAdvanced()
     d->scrollToTitle(d->advancedTitle);
 }
 
+void SettingsView::addCardOnTop(QWidget* _card)
+{
+    auto layout = qobject_cast<QVBoxLayout*>(d->content->widget()->layout());
+    _card->setParent(d->content->widget());
+    layout->insertWidget(0, _card);
+}
+
 void SettingsView::setApplicationLanguage(int _language)
 {
     auto languageString = [_language]() -> QString {

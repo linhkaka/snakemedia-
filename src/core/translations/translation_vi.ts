@@ -15881,6 +15881,24 @@ Trao đổi mọi điều với cộng đồng người viết, chia sẻ tác p
             <source>Start writing</source>
             <translation>Bắt đầu viết</translation>
         </message>
+        <message>
+            <source>Sign in with Google to push screenplays
+to Google Docs</source>
+            <translation>Đăng nhập Google để đẩy kịch bản
+lên Google Docs</translation>
+        </message>
+        <message>
+            <source>It is optional: you can sign in later in the settings or on the first push to Google Docs</source>
+            <translation>Không bắt buộc: bạn có thể đăng nhập sau trong Cài đặt hoặc ở lần đầu đẩy lên Google Docs</translation>
+        </message>
+        <message>
+            <source>Sign in with Google</source>
+            <translation>Đăng nhập bằng Google</translation>
+        </message>
+        <message>
+            <source>Signed in as %1</source>
+            <translation>Đã đăng nhập: %1</translation>
+        </message>
     </context>
     <context>
         <name>Ui::OnboardingView</name>
@@ -23010,6 +23028,41 @@ Nếu bạn làm việc liên tục, dự án được lưu mỗi 3 phút.</tran
         <message>
             <source>Jenny Script has no access to Google Drive. Push again, sign in and tick the permission to see and edit the Google Drive files used with Jenny Script.</source>
             <translation>Jenny Script chưa có quyền truy cập Google Drive. Hãy bấm Đẩy lên lần nữa, đăng nhập và tick ô quyền xem, chỉnh sửa các tệp Google Drive dùng với Jenny Script.</translation>
+        </message>
+    </context>
+    <context>
+        <name>ManagementLayer::GoogleAccountCard</name>
+        <message>
+            <source>Google account</source>
+            <translation>Tài khoản Google</translation>
+        </message>
+        <message>
+            <source>Google sign in is not available in this build</source>
+            <translation>Bản build này chưa bật đăng nhập Google</translation>
+        </message>
+        <message>
+            <source>Signed in</source>
+            <translation>Đã đăng nhập</translation>
+        </message>
+        <message>
+            <source>Signed in as %1</source>
+            <translation>Đã đăng nhập: %1</translation>
+        </message>
+        <message>
+            <source>Not signed in. Sign in to push screenplays to Google Docs</source>
+            <translation>Chưa đăng nhập. Đăng nhập để đẩy kịch bản lên Google Docs</translation>
+        </message>
+        <message>
+            <source>Switch account</source>
+            <translation>Đổi tài khoản</translation>
+        </message>
+        <message>
+            <source>Sign in with Google</source>
+            <translation>Đăng nhập bằng Google</translation>
+        </message>
+        <message>
+            <source>Sign out</source>
+            <translation>Đăng xuất</translation>
         </message>
     </context>
 </TS>

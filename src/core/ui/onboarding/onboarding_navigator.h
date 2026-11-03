@@ -58,6 +58,11 @@ public:
      */
     void setAccountInfo(const Domain::AccountInfo& _accountInfo);
 
+    /**
+     * @brief Jenny Script fork: show the Google account the user signed in with
+     */
+    void showGoogleAccount(const QString& _email);
+
 signals:
     /**
      * @brief Пользователь выбрал язык приложения

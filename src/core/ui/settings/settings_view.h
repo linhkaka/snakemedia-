@@ -43,6 +43,11 @@ public:
     void showShortcuts();
     void showAdvanced();
 
+    /**
+     * @brief Jenny Script fork: add a card above the application settings
+     */
+    void addCardOnTop(QWidget* _card);
+
     //
     // Задание параметров приложения
     //

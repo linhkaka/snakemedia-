@@ -26,11 +26,13 @@ versionAtLeast(QT_VERSION, 6.9.0):qtHaveModule(networkauth) {
     INCLUDEPATH += $$GOOGLE_SRC_ROOT/3rd_party/qtkeychain
 
     HEADERS += \
+        $$PWD/google_account_card.h \
         $$PWD/google_auth_manager.h \
         $$PWD/google_docs_manager.h \
         $$PWD/google_drive_client.h
 
     SOURCES += \
+        $$PWD/google_account_card.cpp \
         $$PWD/google_auth_manager.cpp \
         $$PWD/google_docs_manager.cpp \
         $$PWD/google_drive_client.cpp

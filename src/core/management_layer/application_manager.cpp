@@ -20,6 +20,9 @@
 #include <cloud/cloud_service_manager.h>
 #endif
 #ifdef GOOGLE_INTEGRATION
+#include "content/google/google_account_card.h"
+#include "content/google/google_auth_manager.h"
+#include <ui/settings/settings_view.h>
 #include "content/google/google_docs_manager.h"
 #endif
 
@@ -3410,6 +3413,25 @@ void ApplicationManager::initConnections()
 #ifdef GOOGLE_INTEGRATION
     connect(d->projectManager.data(), &ProjectManager::googleDocsActionRequested,
             d->googleDocsManager.data(), &GoogleDocsManager::handleAction);
+    //
+    // ... optional Google sign in on the onboarding sign in page
+    //
+    auto googleAuthManager = d->googleDocsManager->authManager();
+    connect(d->onboardingManager.data(), &OnboardingManager::askConfirmationCodeRequested,
+            googleAuthManager, &GoogleAuthManager::signIn);
+    connect(googleAuthManager, &GoogleAuthManager::signedInChanged, this,
+            [this, googleAuthManager](bool _isSignedIn) {
+                if (_isSignedIn) {
+                    d->onboardingManager->showGoogleAccount(googleAuthManager->email());
+                }
+            });
+    //
+    // ... and the Google account card in the settings
+    //
+    if (auto settingsView = qobject_cast<Ui::SettingsView*>(d->settingsManager->view());
+        settingsView != nullptr) {
+        settingsView->addCardOnTop(new GoogleAccountCard(googleAuthManager));
+    }
 #endif
     connect(d->projectManager.data(), &ProjectManager::importRequested, d->importManager.data(),
             &ImportManager::import);

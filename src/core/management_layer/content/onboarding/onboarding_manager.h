@@ -50,6 +50,11 @@ public:
     void completeSignIn();
 
     /**
+     * @brief Jenny Script fork: show the Google account the user signed in with
+     */
+    void showGoogleAccount(const QString& _email);
+
+    /**
      * @brief Установить параметры аккаунта
      */
     void setAccountInfo(const Domain::AccountInfo& _accountInfo);
