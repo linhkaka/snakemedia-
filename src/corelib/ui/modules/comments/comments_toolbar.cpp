@@ -176,7 +176,14 @@ void CommentsToolbar::Implementation::updateActions()
         colorPickerPopup->setCustomPalette(palette);
 
         if (const auto value = QSettings().value(kRevisionColorKey); value.isValid()) {
-            q->setActionColor(colorAction, value.value<QColor>());
+            //
+            // Jenny Script fork: map a color of the upstream palette to the same revision level
+            //
+            auto color = value.value<QColor>();
+            if (const auto level = ColorHelper::revisionLevel(color); level != -1) {
+                color = ColorHelper::revisionColor(level);
+            }
+            q->setActionColor(colorAction, color);
         } else {
             q->setActionColor(colorAction, palette.constFirst());
         }

@@ -66,3 +66,4 @@ Keep this list up to date: these are the files to check when merging upstream.
 | `src/corelib/corelib.pro` | `fountain_text_normalizer.{h,cpp}` registered |
 | `src/corelib/business_layer/model/structure/structure_proxy_model.cpp` | statistics documents hidden in the navigator (their plugins are private) |
 | `application_manager.cpp`, `onboarding_navigator.cpp`, `onboarding_view.cpp`, `language_dialog.cpp` | Vietnamese is the default and first language; onboarding saves the chosen language instead of the system one (upstream bug) |
+| `src/corelib/utils/helpers/color_helper.cpp`, `src/corelib/ui/modules/comments/comments_toolbar.cpp` | industry standard revision colors (Blue, Pink, Yellow, Green, Goldenrod, Buff, Salmon, Cherry, Tan); upstream colors still map to the same level |

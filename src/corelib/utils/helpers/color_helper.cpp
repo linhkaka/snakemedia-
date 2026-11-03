@@ -6,7 +6,19 @@
 
 
 namespace {
+//
+// Jenny Script fork: industry standard revision order (WGA / Final Draft / Celtx):
+// Blue, Pink, Yellow, Green, Goldenrod, Buff, Salmon, Cherry, Tan. Shades are tuned to stay
+// readable as text color on both light and dark themes.
+//
 const QVector<QColor> kRevisionColors = {
+    "#3d7cf0", "#f062a8", "#d4b000", "#2ea043", "#daa520",
+    "#c9a66b", "#fa8072", "#de3163", "#d2b48c",
+};
+//
+// Upstream palette, same order, kept to recognize marks made before the fork changed colors
+//
+const QVector<QColor> kLegacyRevisionColors = {
     "#3030ff", "#ff00ff", "#a0a000", "#008000", "#cc7f32",
     "#8e6b23", "#a74242", "#d5236b", "#db9370",
 };
@@ -189,5 +201,6 @@ QColor ColorHelper::revisionColor(int _level)
 
 int ColorHelper::revisionLevel(const QColor& _color)
 {
-    return kRevisionColors.indexOf(_color);
+    const auto level = kRevisionColors.indexOf(_color);
+    return level != -1 ? level : kLegacyRevisionColors.indexOf(_color);
 }
