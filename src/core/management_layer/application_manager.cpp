@@ -11,7 +11,9 @@
 #include "content/settings/settings_manager.h"
 #include "content/shortcuts/shortcuts_manager.h"
 #include "content/writing_session/writing_session_manager.h"
+#ifndef NO_CRASHPAD
 #include "crashpad_paths.h"
+#endif
 #include "plugins_builder.h"
 
 #ifdef CLOUD_SERVICE_MANAGER
@@ -34,9 +36,11 @@
 #endif
 
 #include <business_layer/model/abstract_model.h>
+#ifndef NO_CRASHPAD
 #include <client/crash_report_database.h>
 #include <client/crashpad_client.h>
 #include <client/settings.h>
+#endif
 #include <data_layer/database.h>
 #include <data_layer/storage/settings_storage.h>
 #include <data_layer/storage/storage_facade.h>
@@ -432,7 +436,9 @@ public:
     /**
      * @brief Клиент Crashpad для обработки крашей
      */
+#ifndef NO_CRASHPAD
     QScopedPointer<crashpad::CrashpadClient> crashpadClient;
+#endif
 
     /**
      * @brief Таймер автосохранения проекта
@@ -519,6 +525,9 @@ ApplicationManager::Implementation::~Implementation()
 
 bool ApplicationManager::Implementation::initCrashpad()
 {
+#ifdef NO_CRASHPAD
+    return false;
+#else
     CrashpadPaths crashpadPaths;
     base::FilePath handler(CrashpadPaths::getPlatformString(crashpadPaths.getHandlerPath()));
     base::FilePath reportsDir(CrashpadPaths::getPlatformString(crashpadPaths.getReportsPath()));
@@ -602,6 +611,7 @@ bool ApplicationManager::Implementation::initCrashpad()
         crashpadClient.reset();
     }
     return status;
+#endif
 }
 
 void ApplicationManager::Implementation::initMeasurementMetrics()
@@ -729,6 +739,9 @@ void ApplicationManager::Implementation::sendStartupStatistics()
 
 void ApplicationManager::Implementation::sendCrashInfo()
 {
+#ifdef NO_CRASHPAD
+    return;
+#else
     CrashpadPaths crashpadPaths;
 
     //
@@ -965,6 +978,7 @@ void ApplicationManager::Implementation::sendCrashInfo()
     // Отображаем диалог
     //
     dialog->showDialog();
+#endif
 }
 
 void ApplicationManager::Implementation::loadMissedFonts()

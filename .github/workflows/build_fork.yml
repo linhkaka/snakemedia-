@@ -1,0 +1,150 @@
+#
+# Jenny Script fork CI.
+# Builds without private submodules, secrets or Crashpad (CONFIG+=no_crashpad)
+# and never publishes anything outside of this repository's workflow artifacts.
+#
+name: Build Jenny Script
+
+env:
+  QT_VERSION: 6.11.2
+  QT_MODULES: qt5compat qtimageformats qtmultimedia qtspeech qtwebsockets qtnetworkauth
+  # needed until miurahr/aqtinstall#1007 ships 3.3.1 for Qt >= 6.11.0 (same pin as upstream)
+  AQT_SOURCE: aqtinstall @ git+https://github.com/miurahr/aqtinstall@16db45a70b5905ad596941b223469bc86a56901e
+
+on:
+  push:
+    branches: [ master, 'phase-*' ]
+  pull_request:
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Linux (compile + tests)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Checkout public submodules only
+        shell: bash
+        run: |
+          git submodule update --init --recursive src/3rd_party/pdfhummus src/3rd_party/pdftextextraction
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          target: desktop
+          modules: ${{ env.QT_MODULES }}
+          aqtsource: ${{ env.AQT_SOURCE }}
+          cache: true
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt update
+          sudo apt install -y libgstreamer-plugins-base1.0-0 make pkg-config libx11-dev xcb libx11-xcb-dev libxkbcommon-x11-0 libxkbcommon-dev libgtk-3-dev libxcb-cursor0 zlib1g-dev
+
+      - name: Run QMake
+        shell: bash
+        run: |
+          cd src
+          qmake starc.pro CONFIG+=release CONFIG+=no_crashpad
+
+      - name: Build
+        shell: bash
+        run: |
+          cd src
+          make -j$(nproc)
+
+      - name: Build tests
+        shell: bash
+        run: |
+          mkdir -p work/remote-text-tests
+          cd work/remote-text-tests
+          qmake ../../tests/remote_text_changes/remote_text_changes.pro CONFIG+=release
+          make -j$(nproc)
+
+      - name: Run tests
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          cd work/remote-text-tests
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/src/_build:$GITHUB_WORKSPACE/src/_build/libs:$GITHUB_WORKSPACE/src/_build/plugins${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          ./tst_remote_text_changes
+
+  windows:
+    name: Windows x64 (portable zip)
+    runs-on: windows-2022
+    timeout-minutes: 120
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Checkout public submodules only
+        shell: bash
+        run: |
+          git submodule update --init --recursive src/3rd_party/pdfhummus src/3rd_party/pdftextextraction
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          arch: win64_msvc2022_64
+          target: desktop
+          setup-python: false
+          modules: ${{ env.QT_MODULES }}
+          aqtsource: ${{ env.AQT_SOURCE }}
+          cache: true
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          choco install openssl --version=3.1.1 --force
+          choco install jom
+
+      - name: Create OpenSSL path without spaces
+        shell: pwsh
+        run: |
+          New-Item -ItemType Junction -Path 'C:\OpenSSL' -Target 'C:\Program Files\OpenSSL' -Force
+          "OPENSSL_PREFIX=C:\OpenSSL" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8NoBOM
+
+      - name: Configure MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Run QMake
+        shell: bash
+        run: |
+          cd src
+          qmake starc.pro CONFIG+=release CONFIG+=no_crashpad
+
+      - name: Build
+        run: |
+          cd src
+          jom -j4
+
+      - name: Prepare portable folder
+        shell: bash
+        run: |
+          cd build/windows
+          ./make-exe_64.sh 0.0.0
+          # Crashpad is not built in the fork
+          rmdir files_64/crashpad 2>/dev/null || true
+
+      - name: Upload portable build
+        uses: actions/upload-artifact@v4
+        with:
+          name: jenny-script-windows-x64-portable
+          path: build/windows/files_64
+          if-no-files-found: error

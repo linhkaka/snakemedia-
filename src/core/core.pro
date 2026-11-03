@@ -41,6 +41,14 @@ INCLUDEPATH += ..
 #
 # Подключаем Crashpad
 #
+# Jenny Script fork: build with CONFIG+=no_crashpad to drop Crashpad and BugSplat entirely.
+# Lines inside the block are intentionally not re-indented to keep upstream merges clean.
+#
+no_crashpad {
+DEFINES += NO_CRASHPAD
+# the mac post link step at the end of this file is chained with " && ..."
+macx:QMAKE_POST_LINK += "true"
+} else {
 LIBS += -L$$LIBSDIR/ -lcrashpad_paths
 INCLUDEPATH += $$PWD/../3rd_party/crashpad_paths
 DEPENDPATH += $$PWD/../3rd_party/crashpad_paths
@@ -114,6 +122,7 @@ linux {
     QMAKE_POST_LINK += "mkdir -p $$DESTDIR/../crashpad"
     QMAKE_POST_LINK += " && cp $$CRASHPAD_HANDLER_SRC $$DESTDIR/../crashpad/crashpad_handler"
 }
+} # !no_crashpad
 #
 
 #
