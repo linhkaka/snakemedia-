@@ -33,10 +33,10 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
 
-      - name: Checkout public submodules only
+      - name: Checkout public submodules only (no private plugins)
         shell: bash
         run: |
-          git submodule update --init --recursive src/3rd_party/pdfhummus src/3rd_party/pdftextextraction
+          git submodule update --init --recursive src/3rd_party/pdfhummus src/3rd_party/pdftextextraction src/3rd_party/qtkeychain
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
@@ -60,6 +60,9 @@ jobs:
 
       - name: Run QMake
         shell: bash
+        env:
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
         run: |
           cd src
           qmake starc.pro CONFIG+=release CONFIG+=no_crashpad
@@ -118,10 +121,10 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
 
-      - name: Checkout public submodules only
+      - name: Checkout public submodules only (no private plugins)
         shell: bash
         run: |
-          git submodule update --init --recursive src/3rd_party/pdfhummus src/3rd_party/pdftextextraction
+          git submodule update --init --recursive src/3rd_party/pdfhummus src/3rd_party/pdftextextraction src/3rd_party/qtkeychain
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
@@ -158,6 +161,9 @@ jobs:
 
       - name: Run QMake
         shell: bash
+        env:
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
         run: |
           cd src
           qmake starc.pro CONFIG+=release CONFIG+=no_crashpad
@@ -174,6 +180,8 @@ jobs:
           ./make-exe_64.sh 0.0.0
           # Crashpad is not built in the fork
           rmdir files_64/crashpad 2>/dev/null || true
+          # Qt modules used by the fork only
+          cp "$QT_ROOT_DIR/bin/Qt6NetworkAuth.dll" files_64/
 
       - name: Upload portable build
         uses: actions/upload-artifact@v4

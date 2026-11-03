@@ -342,6 +342,9 @@ RESOURCES += \
     resources.qrc \
     translations.qrc
 
+# Jenny Script fork: Google Docs / Drive integration
+include(management_layer/content/google/google.pri)
+
 mac {
     load(resolve_target)
     QMAKE_POST_LINK += " && install_name_tool -change libcorelib.dylib @executable_path/../Frameworks/libcorelib.dylib $$QMAKE_RESOLVED_TARGET"

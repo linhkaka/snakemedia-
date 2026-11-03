@@ -25,7 +25,7 @@ Qt 6.11.x (6.8 minimum), modules `qt5compat qtimageformats qtmultimedia qtspeech
 Init **only** the public submodules:
 
 ```bash
-git submodule update --init --recursive src/3rd_party/pdfhummus src/3rd_party/pdftextextraction
+git submodule update --init --recursive src/3rd_party/pdfhummus src/3rd_party/pdftextextraction src/3rd_party/qtkeychain
 ```
 
 Linux / macOS:
@@ -67,3 +67,4 @@ Keep this list up to date: these are the files to check when merging upstream.
 | `src/corelib/business_layer/model/structure/structure_proxy_model.cpp` | statistics documents hidden in the navigator (their plugins are private) |
 | `application_manager.cpp`, `onboarding_navigator.cpp`, `onboarding_view.cpp`, `language_dialog.cpp` | Vietnamese is the default and first language; onboarding saves the chosen language instead of the system one (upstream bug) |
 | `src/corelib/utils/helpers/color_helper.cpp`, `src/corelib/ui/modules/comments/comments_toolbar.cpp` | industry standard revision colors (Blue, Pink, Yellow, Green, Goldenrod, Buff, Salmon, Cherry, Tan); upstream colors still map to the same level |
+| `src/core/core.pro` | `include(management_layer/content/google/google.pri)` (Google integration, QtKeychain) |

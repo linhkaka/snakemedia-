@@ -82,3 +82,6 @@
 [submodule "src/core/management_layer/plugins/presentation"]
 	path = src/core/management_layer/plugins/presentation
 	url = git@github.com:story-apps/starc-presentation-plugin.git
+[submodule "src/3rd_party/qtkeychain"]
+	path = src/3rd_party/qtkeychain
+	url = https://github.com/frankosterfeld/qtkeychain.git

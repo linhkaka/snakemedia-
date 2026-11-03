@@ -17,7 +17,7 @@ Tên app tạm: **Jenny Script** (chốt ở Phase 0, quyết định D3).
 ## Sự thật về repo (kiểm ngày 03/11/2026, upstream v0.8.4)
 - **Repo public không có** `src/cloud` (submodule private `story-apps/starcloud`) và khoảng 25 plugin private trong `src/core/management_layer/plugins/`: cards, timeline, mind map, breakdown, statistics, character/location/world information, collaborators, images gallery, presentation… Các thư mục này rỗng là bình thường, vì `plugins.pro` dùng `exists()` nên vẫn build được. Data model của nhân vật, bối cảnh, world… vẫn public trong `src/corelib/business_layer/model/`.
 - **Cấm** chạy `git submodule update --init --recursive` không kèm đường dẫn (sẽ đòi quyền vào repo private). Chỉ init submodule public:
-  `git submodule update --init --recursive src/3rd_party/pdfhummus src/3rd_party/pdftextextraction`
+  `git submodule update --init --recursive src/3rd_party/pdfhummus src/3rd_party/pdftextextraction src/3rd_party/qtkeychain`
 - Cloud gốc được nối vào qua `#ifdef CLOUD_SERVICE_MANAGER` trong `src/core/management_layer/application_manager.cpp`. Lớp `CloudServiceManager` có khoảng 95 hàm/signal. Không viết lại lớp này, trừ khi đang làm Phase 3.
 - File project `.starc` là SQLite (`src/corelib/data_layer/database.cpp`, driver QSQLITE). **Không đổi schema.** Metadata đồng bộ Google lưu bên ngoài file (QSettings, khóa theo UUID).
 - Import/export có sẵn trong `src/corelib/business_layer/import/` và `export/`. Screenplay hỗ trợ Fountain, FDX, DOCX, PDF; import thêm được Celtx, Trelby, KIT Scenarist. Manager phía UI: `src/core/management_layer/content/import/` và `content/export/`.
@@ -32,7 +32,7 @@ Dùng Qt **6.11.x**, tối thiểu **6.8** vì cần PKCE của QtNetworkAuth. M
 
 Linux / macOS:
 ```bash
-git submodule update --init --recursive src/3rd_party/pdfhummus src/3rd_party/pdftextextraction
+git submodule update --init --recursive src/3rd_party/pdfhummus src/3rd_party/pdftextextraction src/3rd_party/qtkeychain
 cd build && ./build_crashpad.sh && cd ..     # tải depot_tools từ chromium.googlesource.com
 cd src && qmake starc.pro CONFIG+=release && make -j8
 ./_build/starcapp                            # macOS: src/_build/starcapp.app
