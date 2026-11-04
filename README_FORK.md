@@ -8,7 +8,7 @@ Based on Story Architect by Story Apps. Licensed under GPL-3.0, see [LICENSE](LI
 The app still shows the name "Story Architect" for now, but this is not an official Story Apps
 release: please report problems here, not to the Story Apps team.
 
-Downloads: [Releases](https://github.com/vienglacial/starc/releases). Credits and third party
+Downloads for Windows and macOS: [Releases](https://github.com/vienglacial/starc/releases). Credits and third party
 licences: [NOTICE.txt](NOTICE.txt).
 
 Roadmap: [docs/FORK_PLAN.md](docs/FORK_PLAN.md).
@@ -47,6 +47,22 @@ OpenSSL 3 at a path without spaces in `OPENSSL_PREFIX`):
 cd src && qmake starc.pro CONFIG+=release CONFIG+=no_crashpad && jom -j4
 ```
 
+macOS package: build with `QMAKE_APPLE_DEVICE_ARCHS="x86_64 arm64"`, then run
+`bash build/mac/make_fork_dmg.sh`. It has an ad-hoc signature only, not an Apple Developer ID.
+
+## Releasing
+
+1. Raise `kVersion` in `src/core/management_layer/content/update/update_info.h`, push, wait for CI.
+2. Pack the Windows artifact as `JennyScript-v<version>-windows-x64.zip` with one root folder.
+   The macOS artifact already holds `JennyScript-v<version>-macos.dmg`.
+3. Tag the commit `v<version>` and publish it as a normal GitHub release (not a prerelease), with
+   both files.
+
+On Windows the app looks at the latest release when it starts and offers it if the version is
+newer. The macOS version does not check for updates. To test
+the update flow, run the app as an older version in PowerShell:
+`$env:JENNY_SCRIPT_TEST_VERSION='0.8.4-jenny.0'; .\starcapp.exe`
+
 ## Syncing with upstream
 
 Remotes: `origin` = this fork, `upstream` = `https://github.com/story-apps/starc`.
@@ -82,6 +98,8 @@ Keep this list up to date: these are the files to check when merging upstream.
 | `src/core/ui/onboarding/onboarding_navigator.{h,cpp}`, `src/core/management_layer/content/onboarding/onboarding_manager.{h,cpp}` | optional Google sign in on the onboarding sign in page (`showGoogleAccount()`) |
 | `src/core/ui/settings/settings_view.{h,cpp}` | `addCardOnTop()` for the Google account card |
 | `src/corelib/ui/widgets/text_edit/scalable_wrapper/scalable_wrapper.cpp`, `src/corelib/corelib.pro` | middle mouse button auto scroll in the text editors (`MiddleButtonAutoScroll`, new file) |
+| `src/core/core.pro`, `src/core/management_layer/application_manager.cpp` | update check at startup on Windows (`AppUpdateManager`, new folder `content/update`) |
+| `src/core/ui/about_application_dialog.cpp`, `src/core/ui/menu_view.cpp` | show the fork version (`AppUpdate::kVersion`) instead of the upstream one |
 | `src/corelib/data_layer/storage/settings_storage.cpp`, `src/core/ui/onboarding/onboarding_navigator.cpp`, `src/core/ui/settings/settings_view.cpp`, `src/core/ui/settings/settings_navigator.cpp` | AI assistant hidden (it needs the private cloud service): the setting always reads as off, which hides the editor toolbar buttons; no onboarding page and no settings item |
 | `src/corelib/utils/helpers/quotes_generator.cpp` | Joss Whedon quote removed: without its context it reads like an insult to the user |
 | `src/core/ui/about_application_dialog.cpp` | fork notice with the source links; the invitation to contact the upstream team is hidden; the version links to the fork releases |

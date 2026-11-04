@@ -33,13 +33,13 @@ Licence texts are in the "licenses" folder next to this file.
 - Qt 6.11.2, unmodified, used under the GNU GPL version 3 (LICENSE.txt):
   https://download.qt.io/official_releases/qt/6.11/6.11.2/
   The Qt Multimedia plugin includes FFmpeg, GNU LGPL: https://ffmpeg.org/legal.html
-- OpenSSL 3, Apache License 2.0 (same text as licenses/pdfhummus.txt): https://www.openssl.org/
+- OpenSSL 3 (Windows package), Apache License 2.0 (same text as licenses/pdfhummus.txt): https://www.openssl.org/
 - QtKeychain, modified BSD licence: https://github.com/frankosterfeld/qtkeychain
 - PDF-Writer (PDFHummus), Apache License 2.0: https://github.com/story-apps/PDF-Writer
 - PDFTextExtraction, Apache License 2.0: https://github.com/story-apps/pdf-text-extraction
 - Hunspell, GNU GPL / LGPL / MPL: https://github.com/hunspell/hunspell
 - QGumboParser, MIT licence
-- Microsoft Visual C++ runtime, redistributed under the Visual Studio licence terms
+- Microsoft Visual C++ runtime (Windows package), redistributed under the Visual Studio licence terms
 
 Other libraries and fonts that come with the original project are in the source code,
 in the folders src/3rd_party and src/corelib/fonts.

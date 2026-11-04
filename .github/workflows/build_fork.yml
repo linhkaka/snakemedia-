@@ -126,6 +126,15 @@ jobs:
           export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/src/_build:$GITHUB_WORKSPACE/src/_build/libs${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
           ./tst_scrollbar_drag
 
+      - name: Build and run app update tests
+        shell: bash
+        run: |
+          mkdir -p work/app-update-tests
+          cd work/app-update-tests
+          qmake ../../tests/app_update/app_update.pro CONFIG+=release
+          make -j$(nproc)
+          ./tst_app_update
+
   windows:
     name: Windows x64 (portable zip)
     runs-on: windows-2022
@@ -208,3 +217,89 @@ jobs:
           name: jenny-script-windows-x64-portable
           path: build/windows/files_64
           if-no-files-found: error
+
+  macos:
+    name: macOS universal (unsigned dmg)
+    runs-on: macos-15
+    timeout-minutes: 180
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Checkout public submodules only (no private plugins)
+        shell: bash
+        run: |
+          git submodule update --init --recursive src/3rd_party/pdfhummus src/3rd_party/pdftextextraction src/3rd_party/qtkeychain
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          target: desktop
+          modules: ${{ env.QT_MODULES }}
+          aqtsource: ${{ env.AQT_SOURCE }}
+          cache: true
+
+      - name: Compile fork translations
+        shell: bash
+        run: |
+          lrelease src/core/translations/translation_vi.ts -qm src/core/translations/translation_vi.qm
+
+      - name: Run QMake
+        shell: bash
+        run: |
+          cd src
+          qmake starc.pro CONFIG+=release CONFIG+=no_crashpad QMAKE_APPLE_DEVICE_ARCHS="x86_64 arm64"
+
+      - name: Build
+        shell: bash
+        run: |
+          cd src
+          make -j$(sysctl -n hw.ncpu)
+
+      - name: Make dmg
+        shell: bash
+        run: |
+          bash build/mac/make_fork_dmg.sh
+
+      # Nobody on the team has a Mac: open the packaged app with Qt moved away, so a library that
+      # is only present on this machine makes it fail here. The screenshot is for a human check.
+      - name: Open the app from the dmg
+        shell: bash
+        run: |
+          mkdir -p work/macos-smoke
+          MOUNT=$(mktemp -d)
+          hdiutil attach build/mac/JennyScript-*-macos.dmg -nobrowse -mountpoint "$MOUNT"
+          ditto "$MOUNT/Jenny Script.app" "work/macos-smoke/Jenny Script.app"
+          hdiutil detach "$MOUNT"
+          mv "$QT_ROOT_DIR" "$QT_ROOT_DIR.hidden"
+          trap 'mv "$QT_ROOT_DIR.hidden" "$QT_ROOT_DIR"' EXIT
+          "work/macos-smoke/Jenny Script.app/Contents/MacOS/starcapp" > work/macos-smoke/app.log 2>&1 &
+          APP_PID=$!
+          sleep 45
+          screencapture -x work/macos-smoke/screen.png || echo "Screenshot not available"
+          if ! kill -0 "$APP_PID" 2>/dev/null; then
+            echo "Error: the app closed by itself"
+            cat work/macos-smoke/app.log
+            exit 1
+          fi
+          kill "$APP_PID"
+          cat work/macos-smoke/app.log
+
+      - name: Upload the app check results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jenny-script-macos-check
+          path: |
+            work/macos-smoke/app.log
+            work/macos-smoke/screen.png
+          if-no-files-found: warn
+
+      - name: Upload dmg
+        uses: actions/upload-artifact@v4
+        with:
+          name: jenny-script-macos-dmg
+          path: build/mac/JennyScript-*-macos.dmg
+          if-no-files-found: error
+          compression-level: 0
