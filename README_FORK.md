@@ -75,3 +75,4 @@ Keep this list up to date: these are the files to check when merging upstream.
 | `src/core/management_layer/plugins/screenplay_text/text/screenplay_text_edit.cpp` | light band under scene headings in the editor (`paintEvent`, not exported) |
 | `src/core/ui/onboarding/onboarding_navigator.{h,cpp}`, `src/core/management_layer/content/onboarding/onboarding_manager.{h,cpp}` | optional Google sign in on the onboarding sign in page (`showGoogleAccount()`) |
 | `src/core/ui/settings/settings_view.{h,cpp}` | `addCardOnTop()` for the Google account card |
+| `src/corelib/ui/widgets/scroll_bar/scroll_bar.cpp` | overlay scroll bar is resized before it is moved, so it stays at the edge and can be dragged (upstream bug candidate) |

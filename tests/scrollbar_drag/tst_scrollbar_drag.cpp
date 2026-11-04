@@ -6,7 +6,6 @@
 #include <utils/helpers/ui_helper.h>
 
 #include <QApplication>
-#include <QMouseEvent>
 #include <QProxyStyle>
 #include <QScrollBar>
 #include <QStyleFactory>
@@ -82,34 +81,6 @@ public:
             return 0;
         }
         return QProxyStyle::pixelMetric(_metric, _option, _widget);
-    }
-};
-
-/**
- * @brief Logs mouse events delivered to the watched widgets
- */
-class MouseEventLogger : public QObject
-{
-public:
-    using QObject::QObject;
-
-    bool eventFilter(QObject* _watched, QEvent* _event) override
-    {
-        switch (_event->type()) {
-        case QEvent::MouseButtonPress:
-        case QEvent::MouseButtonRelease:
-        case QEvent::MouseMove: {
-            const auto mouseEvent = static_cast<QMouseEvent*>(_event);
-            qInfo() << "  event" << _event->type() << "to" << _watched->metaObject()->className()
-                    << _watched->objectName() << "at" << mouseEvent->position()
-                    << "buttons" << mouseEvent->buttons();
-            break;
-        }
-        default: {
-            break;
-        }
-        }
-        return false;
     }
 };
 
@@ -243,23 +214,25 @@ void ScrollBarDragTest::dragMovesEditor()
             << overlay->style()->hitTestComplexControl(QStyle::CC_ScrollBar, &option,
                                                        handle.center(), overlay);
 
-    MouseEventLogger logger;
-    overlay->installEventFilter(&logger);
-    wrapper->installEventFilter(&logger);
-    wrapper->viewport()->installEventFilter(&logger);
-    window.installEventFilter(&logger);
+    //
+    // The scroll bar must stick to the right edge of the editor
+    //
+    QCOMPARE(overlay->geometry().right(), wrapper->rect().right());
 
     const int editorValueBefore = editor->verticalScrollBar()->value();
     auto windowHandle = window.windowHandle();
     QVERIFY(windowHandle != nullptr);
     QTest::mouseMove(windowHandle, pressPosition);
     QTest::qWait(300);
+    //
+    // The scroll bar grows under the mouse cursor, it must not run away from it
+    //
     qInfo().noquote() << "overlay after hover:" << describe(overlay)
                       << "under the press point:" << describe(window.childAt(pressPosition));
+    QCOMPARE(overlay->geometry().right(), wrapper->rect().right());
+    QCOMPARE(window.childAt(pressPosition), static_cast<QWidget*>(overlay));
     QTest::mousePress(windowHandle, Qt::LeftButton, {}, pressPosition);
-    qInfo() << "after press: sliderDown" << overlay->isSliderDown() << "mouse grabber"
-            << (QWidget::mouseGrabber() ? QWidget::mouseGrabber()->metaObject()->className()
-                                        : "none");
+    QVERIFY(overlay->isSliderDown());
     for (int step = 1; step <= 10; ++step) {
         QTest::mouseMove(windowHandle, pressPosition + QPoint(0, step * 20));
         QTest::qWait(20);
@@ -273,20 +246,6 @@ void ScrollBarDragTest::dragMovesEditor()
     qInfo() << "after drag: overlay" << overlay->value() << "wrapper"
             << wrapper->verticalScrollBar()->value() << "editor"
             << editor->verticalScrollBar()->value();
-
-    //
-    // The same press delivered straight to the scroll bar, bypassing the window
-    //
-    {
-        const QPointF local = handle.center();
-        QMouseEvent press(QEvent::MouseButtonPress, local, overlay->mapToGlobal(local),
-                          Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-        QApplication::sendEvent(overlay, &press);
-        qInfo() << "direct press: sliderDown" << overlay->isSliderDown();
-        QMouseEvent release(QEvent::MouseButtonRelease, local, overlay->mapToGlobal(local),
-                            Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
-        QApplication::sendEvent(overlay, &release);
-    }
 
     QCOMPARE(widgetUnderMouse, static_cast<QWidget*>(overlay));
     QVERIFY(overlay->value() > 0);

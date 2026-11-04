@@ -45,16 +45,20 @@ ScrollBar::Implementation::Implementation(ScrollBar* _q, bool _stickToParent)
 void ScrollBar::Implementation::correctScrollbarGeomerty()
 {
     if (stickToParent) {
+        //
+        // Resize before moving: the position depends on the new size, otherwise the scroll bar
+        // drifts away from the parent edge (and from under the mouse cursor while it grows)
+        //
         if (q->orientation() == Qt::Vertical) {
+            q->resize(q->sizeHint().width(), q->parentWidget()->height());
             if (q->isLeftToRight()) {
                 q->move(q->parentWidget()->width() - q->width(), 0);
             } else {
                 q->move(0, 0);
             }
-            q->resize(q->sizeHint().width(), q->parentWidget()->height());
         } else {
-            q->move(0, q->parentWidget()->height() - q->height());
             q->resize(q->parentWidget()->width(), q->sizeHint().height());
+            q->move(0, q->parentWidget()->height() - q->height());
         }
     } else {
         q->updateGeometry();
