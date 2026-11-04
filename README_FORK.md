@@ -82,5 +82,7 @@ Keep this list up to date: these are the files to check when merging upstream.
 | `src/core/ui/onboarding/onboarding_navigator.{h,cpp}`, `src/core/management_layer/content/onboarding/onboarding_manager.{h,cpp}` | optional Google sign in on the onboarding sign in page (`showGoogleAccount()`) |
 | `src/core/ui/settings/settings_view.{h,cpp}` | `addCardOnTop()` for the Google account card |
 | `src/corelib/ui/widgets/text_edit/scalable_wrapper/scalable_wrapper.cpp`, `src/corelib/corelib.pro` | middle mouse button auto scroll in the text editors (`MiddleButtonAutoScroll`, new file) |
+| `src/corelib/data_layer/storage/settings_storage.cpp`, `src/core/ui/onboarding/onboarding_navigator.cpp`, `src/core/ui/settings/settings_view.cpp`, `src/core/ui/settings/settings_navigator.cpp` | AI assistant hidden (it needs the private cloud service): the setting always reads as off, which hides the editor toolbar buttons; no onboarding page and no settings item |
+| `src/corelib/utils/helpers/quotes_generator.cpp` | Joss Whedon quote removed: without its context it reads like an insult to the user |
 | `src/core/ui/about_application_dialog.cpp` | fork notice with the source links; the invitation to contact the upstream team is hidden; the version links to the fork releases |
 | `src/corelib/ui/widgets/scroll_bar/scroll_bar.cpp` | overlay scroll bar is resized before it is moved, so it stays at the edge and can be dragged (upstream bug candidate) |

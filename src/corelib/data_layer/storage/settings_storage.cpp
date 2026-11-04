@@ -1342,6 +1342,14 @@ void SettingsStorage::setValues(const QString& _valuesGroup, const QVariantMap& 
 QVariant SettingsStorage::value(const QString& _key, const QVariant& _defaultValue) const
 {
     //
+    // Jenny Script fork: the AI assistant works through the private cloud service only, so it stays
+    // off even if an older run or the upstream app saved it as enabled
+    //
+    if (_key == kApplicationAiAssistantEnabledKey) {
+        return false;
+    }
+
+    //
     // Пробуем получить значение из кэша
     //
     bool hasCachedValue = false;

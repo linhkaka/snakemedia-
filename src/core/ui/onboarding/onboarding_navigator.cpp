@@ -831,8 +831,9 @@ OnboardingNavigator::OnboardingNavigator(QWidget* _parent)
     connect(d->modulesNovelToggle, &Toggle::checkedChanged, this, [](bool _checked) {
         setSettingsValue(DataStorageLayer::kComponentsNovelAvailableKey, _checked);
     });
+    // Jenny Script fork: skip the AI assistant page, it needs the private cloud service
     connect(d->modulesContinueButton, &Button::clicked, this,
-            [this] { setCurrentWidget(d->aiPage); });
+            [this] { setCurrentWidget(d->backupsPage); });
     //
     connect(d->aiEnabledToggle, &Toggle::checkedChanged, this, [](bool _checked) {
         setSettingsValue(DataStorageLayer::kApplicationAiAssistantEnabledKey, _checked);

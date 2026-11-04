@@ -55,7 +55,7 @@ SettingsNavigator::Implementation::Implementation(QWidget* _parent)
     applicationItem->appendRow(createItem(u8"\U000f062e"));
     applicationItem->appendRow(createItem(u8"\U000f061b"));
     applicationItem->appendRow(createItem(u8"\U000F05E7"));
-    applicationItem->appendRow(createItem(u8"\U000F133C"));
+    // Jenny Script fork: no AI assistant item, the feature needs the private cloud service
     model->appendRow(applicationItem);
     auto componentsItem = createItem(u8"\U000f09ac");
     componentsItem->appendRow(createItem(u8"\U000F021A"));
@@ -203,9 +203,6 @@ void SettingsNavigator::updateTranslations()
     model->item(kApplicationIndex)
         ->child(kApplicationTextEditingIndex)
         ->setText(tr("Text editing"));
-    model->item(kApplicationIndex)
-        ->child(kApplicationAiAssistantIndex)
-        ->setText(tr("AI assistant"));
     model->item(kComponentsIndex)->setText(tr("Components"));
     model->item(kComponentsIndex)->child(kComponentsSimpleTextIndex)->setText(tr("Simple text"));
     model->item(kComponentsIndex)->child(kComponentsScreenplayIndex)->setText(tr("Screenplay"));

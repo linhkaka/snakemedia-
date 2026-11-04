@@ -1054,6 +1054,9 @@ void SettingsView::Implementation::initApplicationCard()
     applicationCardLayout->addWidget(avoidMultipleSpaces, itemIndex++, 0);
     applicationCardLayout->addWidget(applicationAiAssistantTitle, itemIndex++, 0);
     applicationCardLayout->addWidget(enableAiAssistant, itemIndex++, 0);
+    // Jenny Script fork: the AI assistant needs the private cloud service
+    applicationAiAssistantTitle->hide();
+    enableAiAssistant->hide();
 
     applicationCardBottomSpacerIndex = itemIndex;
     applicationCard->setContentLayout(applicationCardLayout);

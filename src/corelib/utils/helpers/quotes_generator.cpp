@@ -275,10 +275,6 @@ QuotesGenerator::Quote QuotesGenerator::generate(int _index)
           QCoreApplication::translate("QuotesGenerator", "That’s my advice with dealing with writer’s block. Follow the fun. If you aren’t having fun, you are doing it wrong."),
           QCoreApplication::translate("QuotesGenerator", "Jordan Peele") },
         { index++,
-          //: Cite of the Joss Whedon
-          QCoreApplication::translate("QuotesGenerator", "Always be yourself…unless you suck"),
-          QCoreApplication::translate("QuotesGenerator", "Joss Whedon") },
-        { index++,
           //: Cite of the Joyce Carol Oates
           QCoreApplication::translate("QuotesGenerator", "The first sentence can’t be written until the final sentence is written."),
           QCoreApplication::translate("QuotesGenerator", "Joyce Carol Oates") },
