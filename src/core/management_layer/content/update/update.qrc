@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/app-update">
+        <file>install_update.ps1</file>
+    </qresource>
+</RCC>

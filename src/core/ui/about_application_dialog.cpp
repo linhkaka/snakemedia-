@@ -1,5 +1,7 @@
 #include "about_application_dialog.h"
 
+#include "../management_layer/content/update/update_info.h"
+
 #include <ui/design_system/design_system.h>
 #include <ui/layouts/flow_layout/flow_layout.h>
 #include <ui/widgets/button/button.h>
@@ -177,7 +179,7 @@ void AboutApplicationDialog::updateTranslations()
     d->vkButton->setVisible(d->isRussianSpeaking);
 
     d->versionLabel->setText(
-        QString("%1 %2").arg(tr("version"), QCoreApplication::applicationVersion()));
+        QString("%1 %2").arg(tr("version"), QString::fromLatin1(ManagementLayer::AppUpdate::kVersion)));
     d->versionLabel->setLink(QUrl("https://github.com/vienglacial/starc/releases"));
     d->authorsLabel1->setText(
         QString("%1 ").arg(tr("Designed, coded and crafted with love at the")));

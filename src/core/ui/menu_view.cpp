@@ -1,6 +1,7 @@
 #include "menu_view.h"
 
 #include "about_application_dialog.h"
+#include "../management_layer/content/update/update_info.h"
 #include "notifications/credits_view.h"
 #include "notifications/release_view.h"
 #include "notifications/subscription_view.h"
@@ -566,7 +567,7 @@ void MenuView::updateTranslations()
     d->notifications->setToolTip(tr("Show notifications"));
 
     d->appVersion->setText(
-        QString("%1 %2").arg(tr("Version"), QCoreApplication::applicationVersion()));
+        QString("%1 %2").arg(tr("Version"), QString::fromLatin1(ManagementLayer::AppUpdate::kVersion)));
     d->aboutApp->setText(tr("About"));
 
     d->notificationsBackButton->setToolTip(tr("Back to main menu"));

@@ -15,6 +15,9 @@
 #include "crashpad_paths.h"
 #endif
 #include "plugins_builder.h"
+#ifdef Q_OS_WIN
+#include "content/update/app_update_manager.h"
+#endif
 
 #ifdef CLOUD_SERVICE_MANAGER
 #include <cloud/cloud_service_manager.h>
@@ -438,6 +441,9 @@ public:
 #ifdef GOOGLE_INTEGRATION
     QScopedPointer<GoogleDocsManager> googleDocsManager;
 #endif
+#ifdef Q_OS_WIN
+    QScopedPointer<AppUpdateManager> appUpdateManager;
+#endif
 #ifdef CLOUD_SERVICE_MANAGER
     QScopedPointer<CloudServiceManager> cloudServiceManager;
 #endif
@@ -490,6 +496,9 @@ ApplicationManager::Implementation::Implementation(ApplicationManager* _q)
     , notificationsManager(new NotificationsManager)
 #ifdef GOOGLE_INTEGRATION
     , googleDocsManager(new GoogleDocsManager(nullptr, applicationView, projectManager.data()))
+#endif
+#ifdef Q_OS_WIN
+    , appUpdateManager(new AppUpdateManager(applicationView))
 #endif
 #ifdef CLOUD_SERVICE_MANAGER
     , cloudServiceManager(new CloudServiceManager)
@@ -3066,6 +3075,24 @@ void ApplicationManager::exec(const QString& _fileToOpenPath)
             // Загружаем недостающие шрифты
             //
             d->loadMissedFonts();
+
+#ifdef Q_OS_WIN
+            //
+            // Jenny Script fork: offer a new version, but not in the middle of the first run setup.
+            // The work is saved before the app closes for the update.
+            //
+            connect(d->appUpdateManager.data(), &AppUpdateManager::installReady, this, [this] {
+                d->saveIfNeeded([this] {
+                    if (d->appUpdateManager->startInstaller()) {
+                        d->exit();
+                    }
+                });
+            });
+            if (settingsValue(DataStorageLayer::kApplicationConfiguredKey).toBool()) {
+                QTimer::singleShot(std::chrono::seconds{ 5 }, d->appUpdateManager.data(),
+                                   &AppUpdateManager::checkForUpdate);
+            }
+#endif
 
             //
             // Проверяем словари проверки орфографии

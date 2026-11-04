@@ -23073,4 +23073,39 @@ Nếu bạn làm việc liên tục, dự án được lưu mỗi 3 phút.</tran
             <translation>Đăng xuất</translation>
         </message>
     </context>
+    <context>
+        <name>ManagementLayer::AppUpdateManager</name>
+        <message>
+            <source>Version %1 is available. Do you want to update now? The app will restart, your projects stay as they are.</source>
+            <translation>Đã có phiên bản %1. Bạn có muốn cập nhật ngay không? App sẽ khởi động lại, các dự án của bạn vẫn giữ nguyên.</translation>
+        </message>
+        <message>
+            <source>Later</source>
+            <translation>Để sau</translation>
+        </message>
+        <message>
+            <source>Update</source>
+            <translation>Cập nhật</translation>
+        </message>
+        <message>
+            <source>Version %1 is available, but the app can't update itself in this folder. You can download the new version from the website.</source>
+            <translation>Đã có phiên bản %1, nhưng app không tự cập nhật được trong thư mục này. Bạn có thể tải bản mới trên trang web.</translation>
+        </message>
+        <message>
+            <source>Open download page</source>
+            <translation>Mở trang tải</translation>
+        </message>
+        <message>
+            <source>Downloading version %1</source>
+            <translation>Đang tải phiên bản %1</translation>
+        </message>
+        <message>
+            <source>Can't download the update. Check your connection and open the app again, it will offer the update next time.</source>
+            <translation>Không tải được bản cập nhật. Bạn kiểm tra mạng rồi mở lại app, lần sau app sẽ hỏi lại.</translation>
+        </message>
+        <message>
+            <source>Can't start the update. You can download the new version from the website.</source>
+            <translation>Không bắt đầu cập nhật được. Bạn có thể tải bản mới trên trang web.</translation>
+        </message>
+    </context>
 </TS>
