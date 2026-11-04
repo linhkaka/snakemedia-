@@ -7776,6 +7776,10 @@ Nút "Đặt lại tất cả cài đặt" đặt lại mọi cài đặt liên 
             <source>Feel free to contact us at any point of your creative journey to share your thoughts about the app, suggest ideas and report issues you met.</source>
             <translation>Đừng ngần ngại liên hệ với chúng tôi bất cứ lúc nào trong hành trình sáng tạo của bạn để chia sẻ suy nghĩ về ứng dụng, đề xuất ý tưởng và báo lỗi bạn gặp phải.</translation>
         </message>
+        <message>
+            <source>This is Jenny Script, a version of Story Architect by Story Apps that was modified by Jenny Pixel Studio in 2026. It is free software under the GNU GPL version 3 and comes with no warranty. Source code of this version and of the original app:</source>
+            <translation>Đây là Jenny Script, bản Story Architect của Story Apps do Jenny Pixel Studio sửa đổi năm 2026. Đây là phần mềm tự do theo giấy phép GNU GPL phiên bản 3 và không kèm bảo hành. Mã nguồn của bản này và của app gốc:</translation>
+        </message>
     </context>
     <context>
         <name>Ui::AbstractExportDialog</name>

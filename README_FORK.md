@@ -5,6 +5,12 @@ Jenny Pixel Studio. It adds a Google Docs / Google Drive bridge on top of the op
 
 Based on Story Architect by Story Apps. Licensed under GPL-3.0, see [LICENSE](LICENSE).
 
+The app still shows the name "Story Architect" for now, but this is not an official Story Apps
+release: please report problems here, not to the Story Apps team.
+
+Downloads: [Releases](https://github.com/vienglacial/starc/releases). Credits and third party
+licences: [NOTICE.txt](NOTICE.txt).
+
 Roadmap: [docs/FORK_PLAN.md](docs/FORK_PLAN.md).
 
 ## Differences from upstream
@@ -76,4 +82,5 @@ Keep this list up to date: these are the files to check when merging upstream.
 | `src/core/ui/onboarding/onboarding_navigator.{h,cpp}`, `src/core/management_layer/content/onboarding/onboarding_manager.{h,cpp}` | optional Google sign in on the onboarding sign in page (`showGoogleAccount()`) |
 | `src/core/ui/settings/settings_view.{h,cpp}` | `addCardOnTop()` for the Google account card |
 | `src/corelib/ui/widgets/text_edit/scalable_wrapper/scalable_wrapper.cpp`, `src/corelib/corelib.pro` | middle mouse button auto scroll in the text editors (`MiddleButtonAutoScroll`, new file) |
+| `src/core/ui/about_application_dialog.cpp` | fork notice with the source links; the invitation to contact the upstream team is hidden; the version links to the fork releases |
 | `src/corelib/ui/widgets/scroll_bar/scroll_bar.cpp` | overlay scroll bar is resized before it is moved, so it stays at the edge and can be dragged (upstream bug candidate) |

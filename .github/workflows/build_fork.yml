@@ -1,7 +1,7 @@
 #
 # Jenny Script fork CI.
-# Builds without private submodules, secrets or Crashpad (CONFIG+=no_crashpad)
-# and never publishes anything outside of this repository's workflow artifacts.
+# Builds without private submodules or Crashpad (CONFIG+=no_crashpad). The only secrets are the
+# OAuth client of the app. Nothing is published outside of this repository's workflow artifacts.
 #
 name: Build Jenny Script
 
@@ -192,6 +192,15 @@ jobs:
           rmdir files_64/crashpad 2>/dev/null || true
           # Qt modules used by the fork only
           cp "$QT_ROOT_DIR/bin/Qt6NetworkAuth.dll" files_64/
+          # Licence and source notices (GPL-3.0 requires them next to the binaries)
+          cp ../../LICENSE files_64/LICENSE.txt
+          cp ../../NOTICE.txt files_64/NOTICE.txt
+          mkdir -p files_64/licenses
+          cp ../../src/3rd_party/pdfhummus/LICENSE files_64/licenses/pdfhummus.txt
+          cp ../../src/3rd_party/pdftextextraction/LICENSE files_64/licenses/pdftextextraction.txt
+          cp ../../src/3rd_party/qgumboparser/LICENSE files_64/licenses/qgumboparser.txt
+          cp ../../src/3rd_party/qtkeychain/COPYING files_64/licenses/qtkeychain.txt
+          cp ../../src/3rd_party/hunspell/COPYING files_64/licenses/hunspell.txt
 
       - name: Upload portable build
         uses: actions/upload-artifact@v4

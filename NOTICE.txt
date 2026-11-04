@@ -1,0 +1,45 @@
+JENNY SCRIPT
+
+Jenny Script is a modified version of Story Architect (STARC), made by Jenny Pixel Studio in 2026.
+The app still shows the name "Story Architect". It is not an official release of Story Apps,
+so please report problems to Jenny Pixel Studio, not to the Story Apps team.
+
+Jenny Script là bản sửa đổi của Story Architect (STARC), do Jenny Pixel Studio thực hiện năm 2026.
+App vẫn hiện tên "Story Architect". Đây không phải bản chính thức của Story Apps,
+nên khi gặp lỗi hãy báo cho Jenny Pixel Studio, đừng báo cho nhóm Story Apps.
+
+
+ORIGINAL WORK
+
+Story Architect (STARC) by Story Apps
+https://github.com/story-apps/starc
+Licensed under the GNU General Public License version 3, see LICENSE.txt.
+
+
+SOURCE CODE OF THIS VERSION
+
+https://github.com/vienglacial/starc
+Each release has a tag with the exact source code it was built from.
+The changes to the original are listed in README_FORK.md.
+
+This program is free software: you can redistribute it and/or modify it under the terms of the
+GNU General Public License version 3. It comes with NO WARRANTY, to the extent permitted by law.
+
+
+THIRD PARTY COMPONENTS
+
+Licence texts are in the "licenses" folder next to this file.
+
+- Qt 6.11.2, unmodified, used under the GNU GPL version 3 (LICENSE.txt):
+  https://download.qt.io/official_releases/qt/6.11/6.11.2/
+  The Qt Multimedia plugin includes FFmpeg, GNU LGPL: https://ffmpeg.org/legal.html
+- OpenSSL 3, Apache License 2.0 (same text as licenses/pdfhummus.txt): https://www.openssl.org/
+- QtKeychain, modified BSD licence: https://github.com/frankosterfeld/qtkeychain
+- PDF-Writer (PDFHummus), Apache License 2.0: https://github.com/story-apps/PDF-Writer
+- PDFTextExtraction, Apache License 2.0: https://github.com/story-apps/pdf-text-extraction
+- Hunspell, GNU GPL / LGPL / MPL: https://github.com/hunspell/hunspell
+- QGumboParser, MIT licence
+- Microsoft Visual C++ runtime, redistributed under the Visual Studio licence terms
+
+Other libraries and fonts that come with the original project are in the source code,
+in the folders src/3rd_party and src/corelib/fonts.

@@ -157,6 +157,7 @@ Data model đã public (`src/corelib/business_layer/model/characters`, `location
 | 5 Plugin | tùy chọn | | |
 
 **Nhật ký** (mới nhất ở trên cùng). Mỗi dòng ghi: `dd/mm/yyyy — đã làm gì — việc tiếp theo`
+- 04/11/2026 — Phát hành public cho bạn bè (`v0.8.4-jenny.1`), giữ tên Story Architect theo quyết định của Kha nên 0.5 rebrand vẫn để ngỏ; thêm `NOTICE.txt`, giấy phép trong zip, ghi nguồn ở màn hình Giới thiệu. OAuth vẫn Testing: bạn bè muốn dùng Google Docs phải được thêm vào test user hoặc chuyển In production.
 - 04/11/2026 — Dán văn bản không có dòng trống (mỗi đoạn một dòng) giờ được nhận dạng từng dòng (`FountainTextNormalizer::formatPlainText`, +test); thêm lệnh "Tự động định dạng" ở menu chuột phải cho đoạn đã có trong editor — Kha test tay (nhất là Ctrl+Z sau khi định dạng cả kịch bản).
 - 04/11/2026 — Thêm tự cuộn bằng nút giữa chuột kiểu trình duyệt (`MiddleButtonAutoScroll`, +1 test): đây mới là điều Kha yêu cầu, editor trước đó không xử lý nút giữa — Kha test tay.
 - 04/11/2026 — Sửa thanh cuộn không kéo được (lỗi có thật nhưng không phải điều Kha hỏi, do hiểu nhầm yêu cầu): `ScrollBar` (upstream) tính vị trí theo kích thước cũ nên lệch ~90px vào trong và nhảy ra mép khi phình to dưới chuột; giờ resize trước rồi move. Thêm `tests/scrollbar_drag` (giả lập kéo, chạy trên CI). Dải xám tiêu đề cảnh bắt đầu đúng từ chữ đầu — Kha test tay thanh cuộn + checklist Google Docs; cân nhắc báo lỗi thanh cuộn cho upstream (hỏi trước).

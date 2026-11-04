@@ -33,6 +33,9 @@ public:
     Body1Label* partnerLabel2 = nullptr;
     Body1Label* descriptionLabel1 = nullptr;
     Body1Label* descriptionLabel2 = nullptr;
+    Body1Label* forkNoticeLabel = nullptr;
+    Body1LinkLabel* forkSourceLink = nullptr;
+    Body1LinkLabel* originalSourceLink = nullptr;
 
     IconButton* twitterButton = nullptr;
     IconButton* discordButton = nullptr;
@@ -53,6 +56,9 @@ AboutApplicationDialog::Implementation::Implementation(QWidget* _parent)
     , partnerLabel2(new Body1Label(_parent))
     , descriptionLabel1(new Body1Label(_parent))
     , descriptionLabel2(new Body1Label(_parent))
+    , forkNoticeLabel(new Body1Label(_parent))
+    , forkSourceLink(new Body1LinkLabel(_parent))
+    , originalSourceLink(new Body1LinkLabel(_parent))
     , twitterButton(new IconButton(_parent))
     , discordButton(new IconButton(_parent))
     , telegramButton(new IconButton(_parent))
@@ -63,6 +69,16 @@ AboutApplicationDialog::Implementation::Implementation(QWidget* _parent)
 {
     partnerLink->setLink(
         QUrl("https://scriptwriting.courses/?utm_source=starc-desktop-app&utm_medium=referral"));
+
+    //
+    // Jenny Script fork: the source notice replaces the invitation to contact the upstream team
+    //
+    descriptionLabel2->hide();
+    mailButton->hide();
+    forkSourceLink->setLink(QUrl("https://github.com/vienglacial/starc"));
+    forkSourceLink->setText("github.com/vienglacial/starc");
+    originalSourceLink->setLink(QUrl("https://github.com/story-apps/starc"));
+    originalSourceLink->setText("github.com/story-apps/starc");
 
     twitterButton->setIcon(u8"\U0000f099");
     discordButton->setIcon(u8"\U0000f392");
@@ -116,6 +132,9 @@ AboutApplicationDialog::AboutApplicationDialog(QWidget* _parent)
     }
     contentsLayout()->addWidget(d->descriptionLabel1, row++, 0);
     contentsLayout()->addWidget(d->descriptionLabel2, row++, 0);
+    contentsLayout()->addWidget(d->forkNoticeLabel, row++, 0);
+    contentsLayout()->addWidget(d->forkSourceLink, row++, 0, Qt::AlignLeft);
+    contentsLayout()->addWidget(d->originalSourceLink, row++, 0, Qt::AlignLeft);
     contentsLayout()->addLayout(d->buttonsLayout, row++, 0);
 
 
@@ -159,8 +178,7 @@ void AboutApplicationDialog::updateTranslations()
 
     d->versionLabel->setText(
         QString("%1 %2").arg(tr("version"), QCoreApplication::applicationVersion()));
-    d->versionLabel->setLink(
-        QUrl(d->isRussianSpeaking ? "https://starc.app/ru/blog/" : "https://starc.app/blog/"));
+    d->versionLabel->setLink(QUrl("https://github.com/vienglacial/starc/releases"));
     d->authorsLabel1->setText(
         QString("%1 ").arg(tr("Designed, coded and crafted with love at the")));
     d->authorsLink->setLink(
@@ -176,6 +194,10 @@ void AboutApplicationDialog::updateTranslations()
     d->descriptionLabel2->setText(
         tr("Feel free to contact us at any point of your creative journey to share your thoughts "
            "about the app, suggest ideas and report issues you met."));
+    d->forkNoticeLabel->setText(
+        tr("This is Jenny Script, a version of Story Architect by Story Apps that was modified by "
+           "Jenny Pixel Studio in 2026. It is free software under the GNU GPL version 3 and comes "
+           "with no warranty. Source code of this version and of the original app:"));
 
     d->closeButton->setText("Close");
 }
@@ -196,6 +218,9 @@ void AboutApplicationDialog::designSystemChangeEvent(DesignSystemChangeEvent* _e
              d->partnerLabel2,
              d->descriptionLabel1,
              d->descriptionLabel2,
+             d->forkNoticeLabel,
+             d->forkSourceLink,
+             d->originalSourceLink,
          }) {
         label->setBackgroundColor(DesignSystem::color().background());
         label->setTextColor(DesignSystem::color().onBackground());
@@ -213,6 +238,8 @@ void AboutApplicationDialog::designSystemChangeEvent(DesignSystemChangeEvent* _e
     d->authorsLink->setTextColor(DesignSystem::color().accent());
     d->partnerLink->setContentsMargins(middleLabelMargins);
     d->partnerLink->setTextColor(DesignSystem::color().accent());
+    d->forkSourceLink->setTextColor(DesignSystem::color().accent());
+    d->originalSourceLink->setTextColor(DesignSystem::color().accent());
     auto rightLabelMargins = labelMargins;
     rightLabelMargins.setLeft(0);
     d->authorsLabel2->setContentsMargins(rightLabelMargins);
