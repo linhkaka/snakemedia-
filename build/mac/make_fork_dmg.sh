@@ -27,6 +27,9 @@ cp -R "$REPO_ROOT/src/_build/starcapp.app" "$APP"
 find "$APP" -name "*.dSYM" -print0 | xargs -0 rm -rf
 macdeployqt "$APP"
 
+# The project files are SQLite. The other Qt SQL drivers need client libraries of database servers
+find "$APP/Contents/PlugIns/sqldrivers" -type f ! -name "libqsqlite.dylib" -delete
+
 #
 # Licence and source notices (GPL-3.0 requires them next to the binaries)
 #
@@ -51,14 +54,21 @@ MIN_MACOS=$(vtool -arch arm64 -show-build "$APP/Contents/MacOS/starcapp" | awk '
 echo "Minimum macOS: $MIN_MACOS"
 
 #
-# Every binary must run on Intel and Apple Silicon, and load only from the bundle or the system
+# Every binary must run on Intel and Apple Silicon, and load only from the bundle or the system.
+# A run takes half an hour, so report every problem instead of stopping at the first one
 #
+PROBLEMS=0
+report() {
+    echo "Error: $1"
+    PROBLEMS=$((PROBLEMS + 1))
+}
+
 check_binary() {
     local file=$1 arch library own_id resolved
     for arch in x86_64 arm64; do
         if ! lipo "$file" -verify_arch "$arch" 2>/dev/null; then
-            echo "Error: $file has no $arch code"
-            return 1
+            report "$file has no $arch code"
+            continue
         fi
         own_id=$(otool -arch "$arch" -D "$file" | tail -n +2)
         while read -r library; do
@@ -69,13 +79,12 @@ check_binary() {
                 @rpath/*) resolved="$APP/Contents/Frameworks/${library#@rpath/}" ;;
                 @executable_path/*) resolved="$APP/Contents/MacOS/${library#@executable_path/}" ;;
                 *)
-                    echo "Error: $file ($arch) needs $library from outside of the bundle"
-                    return 1
+                    report "$file ($arch) needs $library from outside of the bundle"
+                    continue
                     ;;
             esac
             if [ ! -e "$resolved" ]; then
-                echo "Error: $file ($arch) needs $library, not found in the bundle"
-                return 1
+                report "$file ($arch) needs $library, not found in the bundle"
             fi
         done < <(otool -arch "$arch" -L "$file" | tail -n +2 | sed -E 's/^[[:space:]]+//; s/ \(compatibility.*$//')
     done
@@ -92,7 +101,10 @@ while IFS= read -r -d '' file; do
 done < <(find "$APP" -type f -print0)
 echo "Checked $BINARIES binaries"
 if [ "$BINARIES" -lt 10 ]; then
-    echo "Error: too few binaries in the bundle, the check did not look at the right files"
+    report "too few binaries in the bundle, the check did not look at the right files"
+fi
+if [ "$PROBLEMS" -gt 0 ]; then
+    echo "$PROBLEMS problems found"
     exit 1
 fi
 
