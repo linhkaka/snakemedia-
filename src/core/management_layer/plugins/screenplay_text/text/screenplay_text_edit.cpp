@@ -8,6 +8,7 @@
 #include <business_layer/document/text/text_cursor.h>
 #include <business_layer/export/screenplay/screenplay_export_options.h>
 #include <business_layer/export/screenplay/screenplay_fountain_exporter.h>
+#include <business_layer/import/fountain_text_normalizer.h>
 #include <business_layer/import/screenplay/screenplay_fountain_importer.h>
 #include <business_layer/model/characters/character_model.h>
 #include <business_layer/model/characters/characters_model.h>
@@ -1784,12 +1785,18 @@ ContextMenu* ScreenplayTextEdit::createContextMenu(const QPoint& _position, QWid
         }
     });
 
+    auto autoFormatAction = new QAction(this);
+    autoFormatAction->setText(tr("Auto format"));
+    autoFormatAction->setIconText(u8"\U000F0068");
+    connect(autoFormatAction, &QAction::triggered, this, &ScreenplayTextEdit::autoFormatText);
+
     //
     // Располагаем работу со вкладками на самом верху меню
     //
     auto actions = menu->actions().toVector();
     actions.first()->setSeparator(true);
     actions.prepend(bookmarkAction);
+    actions.prepend(autoFormatAction);
     //
     // ... а разделение абзаца вверху опций форматирования
     //
@@ -2023,7 +2030,10 @@ void ScreenplayTextEdit::insertFromMimeData(const QMimeData* _source)
         //
         BusinessLayer::ScreenplayFountainImporter fountainImporter;
         textToInsert
-            = fountainImporter.screenplayText("\n" + TextHelper::removeControlCharacters(text))
+            = fountainImporter
+                  .screenplayText("\n"
+                                  + TextHelper::removeControlCharacters(
+                                      BusinessLayer::FountainTextNormalizer::formatPlainText(text)))
                   .text;
     }
 
@@ -2051,6 +2061,30 @@ void ScreenplayTextEdit::insertFromMimeData(const QMimeData* _source)
         cursor.setPosition(cursorPosition);
         setTextCursor(cursor);
     }
+}
+
+void ScreenplayTextEdit::autoFormatText()
+{
+    if (isReadOnly()) {
+        return;
+    }
+
+    auto cursor = textCursor();
+    if (cursor.hasSelection()) {
+        const int selectionEnd = cursor.selectionEnd();
+        cursor.setPosition(cursor.selectionStart());
+        cursor.movePosition(QTextCursor::StartOfBlock);
+        cursor.setPosition(selectionEnd, QTextCursor::KeepAnchor);
+        cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+    } else {
+        cursor.select(QTextCursor::Document);
+    }
+    setTextCursor(cursor);
+
+    QScopedPointer<QMimeData> selection(createMimeDataFromSelection());
+    QMimeData plainText;
+    plainText.setText(QString::fromUtf8(selection->data("text/plain")));
+    insertFromMimeData(&plainText);
 }
 
 void ScreenplayTextEdit::dropEvent(QDropEvent* _event)

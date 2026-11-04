@@ -20,6 +20,15 @@ class CORE_LIBRARY_EXPORT FountainTextNormalizer
 {
 public:
     static QString normalize(const QString& _text);
+
+    /**
+     * @brief Prepare plain text for the Fountain parser, which needs blank lines between elements
+     *
+     * Text with hardly any blank lines (one paragraph per line, like a script pasted from a chat
+     * or a word processor) gets them back: scene headings and action lines stand alone, a
+     * character cue keeps its parentheticals and one dialogue line. Other text is only normalized.
+     */
+    static QString formatPlainText(const QString& _text);
 };
 
 } // namespace BusinessLayer

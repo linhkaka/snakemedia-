@@ -62,6 +62,52 @@ class FountainImportTest : public QObject
     Q_OBJECT
 
 private slots:
+    void formatPlainTextDetectsEachLine()
+    {
+        const auto text = QString::fromUtf8("EXT. ĐƯỜNG ĐÈO – ĐÊM\n"
+                                            "Rừng thông đen kịt.\n"
+                                            "INT. XE QUANG – ĐÊM\n"
+                                            "Anh rút ra một xấp giấy đóng ghim:\n"
+                                            "HỢP ĐỒNG BẢO HIỂM NHÂN THỌ.\n"
+                                            "Internet trên xe mất sóng.\n"
+                                            "QUANG\n"
+                                            "   (thì thầm)\n"
+                                            "Xin lỗi em...\n"
+                                            "Anh chớp mắt. Môi run.\n"
+                                            "QUANG (V.O.)\n"
+                                            "...xin lỗi con của ba.\n"
+                                            "NỘI. QUÁN CÀ PHÊ - NGÀY\n"
+                                            "Tối đen.");
+        BusinessLayer::ScreenplayFountainImporter importer;
+        const auto result = paragraphs(
+            importer.screenplayText("\n" + FountainTextNormalizer::formatPlainText(text)).text);
+
+        QCOMPARE(textsOf(result, "scene_heading"),
+                 QStringList({ QString::fromUtf8("EXT. ĐƯỜNG ĐÈO – ĐÊM"),
+                               QString::fromUtf8("INT. XE QUANG – ĐÊM"),
+                               QString::fromUtf8("NỘI. QUÁN CÀ PHÊ - NGÀY") }));
+        QCOMPARE(textsOf(result, "character").size(), 2);
+        QCOMPARE(textsOf(result, "parenthetical").size(), 1);
+        QCOMPARE(textsOf(result, "dialogue"),
+                 QStringList({ QString::fromUtf8("Xin lỗi em..."),
+                               QString::fromUtf8("...xin lỗi con của ba.") }));
+        QVERIFY(textsOf(result, "action").contains(QString::fromUtf8("HỢP ĐỒNG BẢO HIỂM NHÂN THỌ.")));
+        QVERIFY(textsOf(result, "action").contains(QString::fromUtf8("Internet trên xe mất sóng.")));
+        QVERIFY(textsOf(result, "action").contains(QString::fromUtf8("Anh chớp mắt. Môi run.")));
+        QCOMPARE(textsOf(result, "action").size(), 6);
+    }
+    void formatPlainTextKeepsProperFountain()
+    {
+        const auto text = QString::fromUtf8("EXT. ĐƯỜNG - ĐÊM\n\n"
+                                            "Hai dòng hành động\n"
+                                            "được ngắt cứng.\n\n"
+                                            "QUANG\n"
+                                            "Thoại dòng một\n"
+                                            "thoại dòng hai\n\n"
+                                            "Tối đen.");
+        QCOMPARE(FountainTextNormalizer::formatPlainText(text),
+                 FountainTextNormalizer::normalize(text));
+    }
     void normalizeLine_data()
     {
         QTest::addColumn<QString>("input");

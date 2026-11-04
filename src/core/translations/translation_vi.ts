@@ -18866,6 +18866,10 @@ Mã khuyến mãi có hiệu lực trong 1 năm</translation>
             <source>Show/hide list</source>
             <translation>Hiện/ẩn danh sách</translation>
         </message>
+        <message>
+            <source>Auto format</source>
+            <translation>Tự động định dạng</translation>
+        </message>
     </context>
     <context>
         <name>Ui::ScreenplayTextEditToolbar</name>

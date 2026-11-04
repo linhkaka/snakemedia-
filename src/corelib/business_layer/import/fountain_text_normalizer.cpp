@@ -3,6 +3,8 @@
 #include <QRegularExpression>
 #include <QStringList>
 
+#include <algorithm>
+
 
 namespace BusinessLayer {
 
@@ -39,6 +41,78 @@ bool isSceneHeading(const QString& _text)
 {
     return startsWithAny(_text, kSceneHeadings) || startsWithAny(_text, kVietnameseSceneHeadings)
         || (_text.startsWith('.') && !_text.startsWith(".."));
+}
+
+/**
+ * @brief Stricter check for a line without the blank lines around it: "INTERNET" is not a heading
+ */
+bool isStandaloneSceneHeading(const QString& _line)
+{
+    if (_line.startsWith('.')) {
+        return !_line.startsWith("..");
+    }
+    for (const auto& prefix : kSceneHeadings) {
+        if (_line.startsWith(prefix) && _line.size() > prefix.size()
+            && (_line.at(prefix.size()) == '.' || _line.at(prefix.size()) == ' ')) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool isParenthetical(const QString& _line)
+{
+    return _line.startsWith('(') && _line.endsWith(')');
+}
+
+/**
+ * @brief Uppercase short line without closing punctuation: "QUANG", "QUANG (V.O.)"
+ */
+bool isCharacterCue(const QString& _line)
+{
+    if (_line.startsWith('@')) {
+        return true;
+    }
+
+    static const QRegularExpression kExtension(QStringLiteral(R"(\s*\([^)]*\)\s*\^?$)"));
+    const QString name = QString(_line).remove(kExtension).simplified();
+    constexpr int kMaximumLength = 40;
+    constexpr int kMaximumWords = 5;
+    if (name.isEmpty() || name.size() > kMaximumLength || name.count(' ') >= kMaximumWords
+        || name != name.toUpper()) {
+        return false;
+    }
+    if (!std::any_of(name.cbegin(), name.cend(), [](QChar _char) { return _char.isLetter(); })) {
+        return false;
+    }
+
+    static const QString kClosingPunctuation = QString::fromUtf8(".!?,:;…\"'”");
+    return !kClosingPunctuation.contains(name.back());
+}
+
+/**
+ * @brief Proper Fountain has a blank line every few lines, even when it is hard wrapped
+ */
+bool hasHardlyAnyBlankLines(const QStringList& _lines)
+{
+    int filledLines = 0;
+    int blankLineRuns = 0;
+    bool isPreviousBlank = false;
+    for (const auto& line : _lines) {
+        if (line.trimmed().isEmpty()) {
+            if (filledLines > 0 && !isPreviousBlank) {
+                ++blankLineRuns;
+            }
+            isPreviousBlank = true;
+        } else {
+            ++filledLines;
+            isPreviousBlank = false;
+        }
+    }
+    if (isPreviousBlank && blankLineRuns > 0) {
+        --blankLineRuns;
+    }
+    return filledLines >= 2 && blankLineRuns * 10 < filledLines;
 }
 
 } // namespace
@@ -88,6 +162,64 @@ QString FountainTextNormalizer::normalize(const QString& _text)
         }
     }
     return lines.join('\n');
+}
+
+QString FountainTextNormalizer::formatPlainText(const QString& _text)
+{
+    const QString normalized = normalize(_text);
+    const auto lines = normalized.split('\n');
+    if (!hasHardlyAnyBlankLines(lines)) {
+        return normalized;
+    }
+
+    QStringList rows;
+    for (const auto& line : lines) {
+        if (const auto row = line.trimmed(); !row.isEmpty()) {
+            rows.append(row);
+        }
+    }
+
+    QStringList result;
+    const auto addBlock = [&result](const QStringList& _block) {
+        if (!result.isEmpty()) {
+            result.append(QString());
+        }
+        result.append(_block);
+    };
+    const auto isDialogue = [](const QString& _row) {
+        return !isStandaloneSceneHeading(_row) && !isCharacterCue(_row);
+    };
+
+    for (int index = 0; index < rows.size(); ++index) {
+        const auto& row = rows.at(index);
+        const bool isCue = !isStandaloneSceneHeading(row) && isCharacterCue(row)
+            && index + 1 < rows.size() && isDialogue(rows.at(index + 1));
+        if (!isCue) {
+            addBlock({ row });
+            continue;
+        }
+
+        //
+        // Cue, then any number of "(parenthetical) + dialogue line" pairs
+        //
+        QStringList block = { row };
+        int next = index + 1;
+        forever
+        {
+            while (next < rows.size() && isParenthetical(rows.at(next))) {
+                block.append(rows.at(next++));
+            }
+            if (next < rows.size() && isDialogue(rows.at(next))) {
+                block.append(rows.at(next++));
+            }
+            if (next >= rows.size() || !isParenthetical(rows.at(next))) {
+                break;
+            }
+        }
+        addBlock(block);
+        index = next - 1;
+    }
+    return result.join('\n');
 }
 
 } // namespace BusinessLayer

@@ -205,6 +205,12 @@ protected:
     bool canInsertFromMimeData(const QMimeData* _source) const override;
     QMimeData* createMimeDataFromSelection() const override;
     void insertFromMimeData(const QMimeData* _source) override;
+
+    /**
+     * @brief Detect the paragraph types of the selected paragraphs (of the whole text, if nothing
+     *        is selected) again, as if their plain text was pasted
+     */
+    void autoFormatText();
     void dropEvent(QDropEvent* _event) override;
     /** @} */
 
