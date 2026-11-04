@@ -1,5 +1,7 @@
 #include "scalable_wrapper.h"
 
+#include "middle_button_auto_scroll.h"
+
 #include <include/custom_events.h>
 #include <ui/widgets/context_menu/context_menu.h>
 #include <ui/widgets/text_edit/completer/completer.h>
@@ -134,6 +136,8 @@ ScalableWrapper::ScalableWrapper(PageTextEdit* _editor, QWidget* _parent)
     // Настроим синхронизацию полос прокрутки
     //
     initScrollBarsSyncing();
+
+    new MiddleButtonAutoScroll(viewport(), verticalScrollBar(), this);
 }
 
 void ScalableWrapper::initScrollBarsSyncing()

@@ -6,6 +6,8 @@
 #include <utils/helpers/ui_helper.h>
 
 #include <QApplication>
+#include <QCursor>
+#include <QTextCursor>
 #include <QProxyStyle>
 #include <QScrollBar>
 #include <QStyleFactory>
@@ -27,6 +29,7 @@ private slots:
     void initTestCase();
     void dragMovesEditor_data();
     void dragMovesEditor();
+    void middleButtonAutoScrolls();
 };
 
 namespace {
@@ -250,6 +253,76 @@ void ScrollBarDragTest::dragMovesEditor()
     QCOMPARE(widgetUnderMouse, static_cast<QWidget*>(overlay));
     QVERIFY(overlay->value() > 0);
     QVERIFY(editor->verticalScrollBar()->value() > editorValueBefore);
+}
+
+void ScrollBarDragTest::middleButtonAutoScrolls()
+{
+    QWidget window;
+    window.resize(900, 700);
+    auto layout = new QVBoxLayout(&window);
+    layout->setContentsMargins({});
+
+    auto editor = new TestTextEdit;
+    QStringList lines;
+    for (int line = 0; line < 2000; ++line) {
+        lines.append(QString("Line %1 of a long screenplay").arg(line));
+    }
+    editor->setPlainText(lines.join('\n'));
+
+    auto wrapper = new ScalableWrapper(editor);
+    layout->addWidget(wrapper);
+    wrapper->initScrollBarsSyncing();
+    UiHelper::setupScrolling(wrapper, true);
+
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QTest::qWait(200);
+
+    const auto scrollValue = [editor] { return editor->verticalScrollBar()->value(); };
+    const int cursorPosition = editor->textCursor().position();
+    const QPoint center = window.rect().center();
+    auto windowHandle = window.windowHandle();
+    QVERIFY(windowHandle != nullptr);
+
+    //
+    // The press alone does not scroll, but shows that auto scroll is on
+    //
+    QTest::mouseMove(windowHandle, center);
+    QTest::mousePress(windowHandle, Qt::MiddleButton, {}, center);
+    QVERIFY(QApplication::overrideCursor() != nullptr);
+    QCOMPARE(QApplication::overrideCursor()->shape(), Qt::SizeVerCursor);
+    QTest::qWait(150);
+    QCOMPARE(scrollValue(), 0);
+
+    //
+    // A small shake stays in the dead zone
+    //
+    QTest::mouseMove(windowHandle, center + QPoint(0, 4));
+    QTest::qWait(150);
+    QCOMPARE(scrollValue(), 0);
+
+    //
+    // The page runs towards the cursor offset and keeps running while the mouse stands still
+    //
+    QTest::mouseMove(windowHandle, center + QPoint(0, 150));
+    QTRY_VERIFY_WITH_TIMEOUT(scrollValue() > 300, 3000);
+    const int scrolledDown = scrollValue();
+    QTest::mouseMove(windowHandle, center - QPoint(0, 150));
+    QTRY_VERIFY_WITH_TIMEOUT(scrollValue() < scrolledDown, 3000);
+
+    //
+    // Releasing the button stops the page and restores the cursor
+    //
+    QTest::mouseRelease(windowHandle, Qt::MiddleButton, {}, center - QPoint(0, 150));
+    QVERIFY(QApplication::overrideCursor() == nullptr);
+    const int stoppedAt = scrollValue();
+    QTest::qWait(150);
+    QCOMPARE(scrollValue(), stoppedAt);
+
+    //
+    // The editor itself never saw the button, so the text cursor stays put
+    //
+    QCOMPARE(editor->textCursor().position(), cursorPosition);
 }
 
 QTEST_MAIN(ScrollBarDragTest)
