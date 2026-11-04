@@ -4,7 +4,10 @@
 #include <ui/widgets/text_edit/scalable_wrapper/scalable_wrapper.h>
 #include <utils/helpers/ui_helper.h>
 
+#include <QApplication>
+#include <QProxyStyle>
 #include <QScrollBar>
+#include <QStyleFactory>
 #include <QStyleOptionSlider>
 #include <QVBoxLayout>
 #include <QtTest>
@@ -20,11 +23,52 @@ class ScrollBarDragTest : public QObject
     Q_OBJECT
 
 private slots:
+    void initTestCase();
     void dragMovesEditor_data();
     void dragMovesEditor();
 };
 
 namespace {
+
+/**
+ * @brief Copy of the scroll bar related parts of ApplicationStyle (src/core/ui/application_style.cpp),
+ *        which lives in the core library and can not be linked here
+ */
+class TestApplicationStyle : public QProxyStyle
+{
+public:
+    using QProxyStyle::QProxyStyle;
+
+    QRect subControlRect(ComplexControl _complexControl, const QStyleOptionComplex* _option,
+                         SubControl _subControl, const QWidget* _widget) const override
+    {
+        if (_complexControl == CC_ScrollBar
+            && (_subControl == SC_ScrollBarAddLine || _subControl == SC_ScrollBarSubLine)) {
+            return {};
+        }
+        return QProxyStyle::subControlRect(_complexControl, _option, _subControl, _widget);
+    }
+
+    SubControl hitTestComplexControl(ComplexControl _control, const QStyleOptionComplex* _option,
+                                     const QPoint& _pos, const QWidget* _widget) const override
+    {
+        const auto subControl = QProxyStyle::hitTestComplexControl(_control, _option, _pos, _widget);
+        if (_control == CC_ScrollBar
+            && (subControl == SC_ScrollBarAddLine || subControl == SC_ScrollBarSubLine)) {
+            return SC_ScrollBarSlider;
+        }
+        return subControl;
+    }
+
+    int pixelMetric(PixelMetric _metric, const QStyleOption* _option,
+                    const QWidget* _widget) const override
+    {
+        if (_metric == PM_ScrollBarExtent) {
+            return 0;
+        }
+        return QProxyStyle::pixelMetric(_metric, _option, _widget);
+    }
+};
 
 QString describe(const QWidget* _widget)
 {
@@ -51,6 +95,11 @@ ScrollBar* overlayVerticalScrollBar(ScalableWrapper* _wrapper)
 }
 
 } // namespace
+
+void ScrollBarDragTest::initTestCase()
+{
+    QApplication::setStyle(new TestApplicationStyle(QStyleFactory::create("Fusion")));
+}
 
 void ScrollBarDragTest::dragMovesEditor_data()
 {
@@ -152,9 +201,14 @@ void ScrollBarDragTest::dragMovesEditor()
     QTest::mouseMove(windowHandle, pressPosition);
     QTest::qWait(100);
     QTest::mousePress(windowHandle, Qt::LeftButton, {}, pressPosition);
+    qInfo() << "after press: sliderDown" << overlay->isSliderDown() << "mouse grabber"
+            << (QWidget::mouseGrabber() ? QWidget::mouseGrabber()->metaObject()->className()
+                                        : "none");
     for (int step = 1; step <= 10; ++step) {
         QTest::mouseMove(windowHandle, pressPosition + QPoint(0, step * 20));
         QTest::qWait(20);
+        qInfo() << "move" << step << "overlay" << overlay->sliderPosition() << overlay->value()
+                << "editor" << editor->verticalScrollBar()->value();
     }
     const QPoint releasePosition = pressPosition + QPoint(0, 200);
     QTest::mouseRelease(windowHandle, Qt::LeftButton, {}, releasePosition);
