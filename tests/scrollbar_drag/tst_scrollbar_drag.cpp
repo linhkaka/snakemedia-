@@ -1,6 +1,7 @@
 #include <ui/modules/text_scrollbar_manager/screenplay_text_scrollbar_manager.h>
 #include <ui/widgets/scroll_bar/scroll_bar.h>
 #include <ui/widgets/text_edit/page/page_text_edit.h>
+#include <ui/widgets/text_edit/page/page_text_edit_scroll_bar.h>
 #include <ui/widgets/text_edit/scalable_wrapper/scalable_wrapper.h>
 #include <utils/helpers/ui_helper.h>
 
@@ -29,6 +30,19 @@ private slots:
 };
 
 namespace {
+
+using Ui::ScreenplayTextScrollBarManager;
+using Ui::ScrollBarType;
+
+/**
+ * @brief Gives the test access to the inner scroll bars of the editor
+ */
+class TestTextEdit : public PageTextEdit
+{
+public:
+    using PageTextEdit::horizontalScrollBar;
+    using PageTextEdit::verticalScrollBar;
+};
 
 /**
  * @brief Copy of the scroll bar related parts of ApplicationStyle (src/core/ui/application_style.cpp),
@@ -118,7 +132,7 @@ void ScrollBarDragTest::dragMovesEditor()
     auto layout = new QVBoxLayout(&window);
     layout->setContentsMargins({});
 
-    auto editor = new PageTextEdit;
+    auto editor = new TestTextEdit;
     QStringList lines;
     for (int line = 0; line < 2000; ++line) {
         lines.append(QString("Line %1 of a long screenplay").arg(line));
