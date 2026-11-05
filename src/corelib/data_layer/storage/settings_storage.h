@@ -66,6 +66,8 @@ const QString kApplicationBackupsQtyKey = kApplicationGroupKey + "/backups-qty";
 const QString kApplicationShowDocumentsPagesKey = kApplicationGroupKey + "/show-documents-pages";
 // включены ли звуки печатной машинки при наборе текста
 const QString kApplicationUseTypewriterSoundKey = kApplicationGroupKey + "/typewriter-sound";
+// Jenny Script fork: набор звуков при наборе текста
+const QString kApplicationTypingSoundPackKey = kApplicationGroupKey + "/typing-sound-pack";
 // включена ли проверка орфографии
 const QString kApplicationUseSpellCheckerKey = kApplicationGroupKey + "/use-spell-checker";
 // словарь для проверки орфографии

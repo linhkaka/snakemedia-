@@ -65,6 +65,7 @@ signals:
      */
     void applicationLanguageChanged(QLocale::Language _language);
     void applicationLanguageFileChanged(const QString _filePath);
+    void applicationTypingSoundPackChanged();
     void applicationUseSpellCheckerChanged(bool _use);
     void applicationSpellCheckerLanguageChanged(const QString& _languageCode);
     void applicationThemeChanged(Ui::ApplicationTheme _theme);
@@ -129,6 +130,7 @@ private:
     void setApplicationBackupsQty(int _qty);
     void setApplicationShowDocumentsPages(bool _show);
     void setApplicationUseTypeWriterSound(bool _use);
+    void setApplicationTypingSoundPack(const QString& _pack);
     void setApplicationUseSpellChecker(bool _use);
     void setApplicationSpellCheckerLanguage(const QString& _languageCode);
     void loadSpellingDictionary(const QString& _languageCode);

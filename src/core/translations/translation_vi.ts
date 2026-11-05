@@ -21212,6 +21212,38 @@ Nếu bạn làm việc liên tục, dự án được lưu mỗi 3 phút.</tran
             <source>Shortcuts</source>
             <translation>Phím tắt</translation>
         </message>
+        <message>
+            <source>Play a sound while typing</source>
+            <translation>Phát âm thanh khi gõ phím</translation>
+        </message>
+        <message>
+            <source>Sound</source>
+            <translation>Âm thanh</translation>
+        </message>
+        <message>
+            <source>Typewriter</source>
+            <translation>Máy đánh chữ</translation>
+        </message>
+        <message>
+            <source>Mechanical keyboard</source>
+            <translation>Bàn phím cơ</translation>
+        </message>
+        <message>
+            <source>Funny sounds</source>
+            <translation>Vui nhộn</translation>
+        </message>
+        <message>
+            <source>Piano</source>
+            <translation>Piano</translation>
+        </message>
+        <message>
+            <source>Drums</source>
+            <translation>Trống</translation>
+        </message>
+        <message>
+            <source>Violin</source>
+            <translation>Violin</translation>
+        </message>
     </context>
     <context>
         <name>Ui::SimpleTextEdit</name>

@@ -15,6 +15,7 @@
 #include "crashpad_paths.h"
 #endif
 #include "plugins_builder.h"
+#include "content/typing_sounds/typing_sound_player.h"
 #ifdef Q_OS_WIN
 #include "content/update/app_update_manager.h"
 #endif
@@ -382,6 +383,7 @@ public:
      * @brief Если необходимо имитировать звуки печатной машинки в зависимости от нажатой клавиши
      */
     void imitateTypewriterSound(QKeyEvent* _event) const;
+    TypingSoundPlayer* typingSoundPlayer = nullptr;
 
     /**
      * @brief Выйти из приложения
@@ -2727,50 +2729,10 @@ void ApplicationManager::Implementation::imitateTypewriterSound(QKeyEvent* _even
         return;
     }
 
-    auto makeSound = [this](const QString& path) {
-        QSoundEffect* sound = new QSoundEffect(applicationView);
-        sound->setSource(QUrl::fromLocalFile(path));
-        return sound;
-    };
-    static auto s_returnSound = makeSound(":/audio/return");
-    static auto s_spaceSound = makeSound(":/audio/space");
-    static auto s_deleteSound = makeSound(":/audio/backspace");
-    static QVector<QSoundEffect*> s_keySounds
-        = { makeSound(":/audio/key-01"), makeSound(":/audio/key-02"), makeSound(":/audio/key-03"),
-            makeSound(":/audio/key-04") };
-    switch (_event->key()) {
-    case Qt::Key_Return:
-    case Qt::Key_Enter: {
-        s_returnSound->play();
-        break;
-    }
-
-    case Qt::Key_Space: {
-        s_spaceSound->play();
-        break;
-    }
-
-    case Qt::Key_Backspace:
-    case Qt::Key_Delete: {
-        s_deleteSound->play();
-        break;
-    }
-
-    default: {
-        if (_event->text().isEmpty()) {
-            break;
-        }
-
-        const int firstSoundId = 0;
-        const int maxSoundId = 3;
-        static int lastSoundId = firstSoundId;
-        if (lastSoundId > maxSoundId) {
-            lastSoundId = firstSoundId;
-        }
-        s_keySounds[lastSoundId++]->play();
-        break;
-    }
-    }
+    //
+    // Jenny Script fork: the sound depends on the pack chosen in the settings
+    //
+    typingSoundPlayer->playForKey(_event);
 }
 
 void ApplicationManager::Implementation::exit()
@@ -3508,6 +3470,9 @@ void ApplicationManager::initConnections()
                 settingsValue(DataStorageLayer::kApplicationSpellCheckerLanguageKey).toString() };
         QApplication::postEvent(this, event);
     };
+    d->typingSoundPlayer = new TypingSoundPlayer(this);
+    connect(d->settingsManager.data(), &SettingsManager::applicationTypingSoundPackChanged, this,
+            [this] { d->typingSoundPlayer->preview(); });
     connect(d->settingsManager.data(), &SettingsManager::applicationUseSpellCheckerChanged, this,
             postSpellingChangeEvent);
     connect(d->settingsManager.data(), &SettingsManager::applicationSpellCheckerLanguageChanged,

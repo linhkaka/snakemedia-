@@ -60,6 +60,7 @@ public:
     void setApplicationBackupsQty(int _qty);
     void setApplicationShowDocumentsPages(bool _show);
     void setApplicationUseTypewriterSound(bool _use);
+    void setApplicationTypingSoundPack(const QString& _pack);
     void setApplicationUseSpellChecker(bool _use);
     void setApplicationSpellCheckerLanguage(const QString& _languageCode);
     void setApplicationHighlightCurrentLine(bool _highlight);
@@ -203,6 +204,7 @@ signals:
     void applicationBackupsQtyChanged(int _qty);
     void applicationShowDocumentsPagesChanged(bool _show);
     void applicationUseTypewriterSoundChanged(bool _use);
+    void applicationTypingSoundPackChanged(const QString& _pack);
     void applicationUseSpellCheckerChanged(bool _use);
     void applicationSpellCheckerLanguageChanged(const QString& _languageCode);
     void applicationHighlightCurentLineChanged(bool _highlight);

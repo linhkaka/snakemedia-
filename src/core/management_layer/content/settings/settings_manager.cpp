@@ -151,6 +151,8 @@ void SettingsManager::Implementation::loadApplicationSettings()
         settingsValue(DataStorageLayer::kApplicationShowDocumentsPagesKey).toBool());
     view->setApplicationUseTypewriterSound(
         settingsValue(DataStorageLayer::kApplicationUseTypewriterSoundKey).toBool());
+    view->setApplicationTypingSoundPack(
+        settingsValue(DataStorageLayer::kApplicationTypingSoundPackKey).toString());
     view->setApplicationUseSpellChecker(
         settingsValue(DataStorageLayer::kApplicationUseSpellCheckerKey).toBool());
     view->setApplicationSpellCheckerLanguage(
@@ -1095,6 +1097,8 @@ SettingsManager::SettingsManager(QObject* _parent, QWidget* _parentWidget,
             &SettingsManager::setApplicationShowDocumentsPages);
     connect(d->view, &Ui::SettingsView::applicationUseTypewriterSoundChanged, this,
             &SettingsManager::setApplicationUseTypeWriterSound);
+    connect(d->view, &Ui::SettingsView::applicationTypingSoundPackChanged, this,
+            &SettingsManager::setApplicationTypingSoundPack);
     connect(d->view, &Ui::SettingsView::applicationUseSpellCheckerChanged, this,
             &SettingsManager::setApplicationUseSpellChecker);
     connect(d->view, &Ui::SettingsView::applicationSpellCheckerLanguageChanged, this,
@@ -1904,6 +1908,20 @@ void SettingsManager::setApplicationShowDocumentsPages(bool _show)
 void SettingsManager::setApplicationUseTypeWriterSound(bool _use)
 {
     setSettingsValue(DataStorageLayer::kApplicationUseTypewriterSoundKey, _use);
+}
+
+void SettingsManager::setApplicationTypingSoundPack(const QString& _pack)
+{
+    //
+    // The view also reports the value it gets when the settings are loaded, that is not a choice
+    // of the user and must not play a sound
+    //
+    if (settingsValue(DataStorageLayer::kApplicationTypingSoundPackKey).toString() == _pack) {
+        return;
+    }
+
+    setSettingsValue(DataStorageLayer::kApplicationTypingSoundPackKey, _pack);
+    emit applicationTypingSoundPackChanged();
 }
 
 void SettingsManager::setApplicationUseSpellChecker(bool _use)

@@ -348,6 +348,9 @@ include(management_layer/content/google/google.pri)
 # Jenny Script fork: update check and install from the GitHub releases
 include(management_layer/content/update/update.pri)
 
+# Jenny Script fork: sound packs for typing
+include(management_layer/content/typing_sounds/typing_sounds.pri)
+
 mac {
     load(resolve_target)
     QMAKE_POST_LINK += " && install_name_tool -change libcorelib.dylib @executable_path/../Frameworks/libcorelib.dylib $$QMAKE_RESOLVED_TARGET"

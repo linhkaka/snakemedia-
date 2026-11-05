@@ -83,6 +83,25 @@ const QVector<QString> kSpellCheckerLanguagesNameToCode = {
 const int kSpellCheckerLanguageCodeRole = Qt::UserRole + 1;
 
 /**
+ * @brief Jenny Script fork: sound packs for typing, the names are set in updateTranslations()
+ */
+const QVector<QString> kTypingSoundPacks = {
+    "typewriter", "mechanical", "funny", "piano", "drums", "violin",
+};
+const int kTypingSoundPackRole = Qt::UserRole + 1;
+
+QStandardItemModel* buildTypingSoundPacksModel(QObject* _parent)
+{
+    auto model = new QStandardItemModel(_parent);
+    for (const auto& pack : kTypingSoundPacks) {
+        auto item = new QStandardItem(pack);
+        item->setData(pack, kTypingSoundPackRole);
+        model->appendRow(item);
+    }
+    return model;
+}
+
+/**
  * @brief Построить модель для всех доступных справочников проверки орфографии
  */
 QStandardItemModel* buildSpellCheckerLanguagesModel(QObject* _parent)
@@ -317,6 +336,8 @@ public:
     H6Label* applicationTextEditingTitle = nullptr;
     CheckBox* showDocumentsPages = nullptr;
     CheckBox* useTypewriterSound = nullptr;
+    ComboBox* typingSoundPack = nullptr;
+    QStandardItemModel* typingSoundPacksModel = nullptr;
     CheckBox* useSpellChecker = nullptr;
     ComboBox* spellCheckerLanguage = nullptr;
     QStandardItemModel* spellCheckerLanguagesModel = nullptr;
@@ -682,6 +703,8 @@ SettingsView::Implementation::Implementation(QWidget* _parent)
     , applicationTextEditingTitle(new H6Label(applicationCard))
     , showDocumentsPages(new CheckBox(applicationCard))
     , useTypewriterSound(new CheckBox(applicationCard))
+    , typingSoundPack(new ComboBox(applicationCard))
+    , typingSoundPacksModel(buildTypingSoundPacksModel(typingSoundPack))
     , useSpellChecker(new CheckBox(applicationCard))
     , spellCheckerLanguage(new ComboBox(applicationCard))
     , spellCheckerLanguagesModel(buildSpellCheckerLanguagesModel(spellCheckerLanguage))
@@ -967,6 +990,9 @@ void SettingsView::Implementation::initApplicationCard()
     backupsQty->setSpellCheckPolicy(SpellCheckPolicy::Manual);
     backupsQty->setEnabled(false);
     backupsQty->setSuffix("  ");
+    typingSoundPack->setSpellCheckPolicy(SpellCheckPolicy::Manual);
+    typingSoundPack->setEnabled(false);
+    typingSoundPack->setModel(typingSoundPacksModel);
     spellCheckerLanguage->setSpellCheckPolicy(SpellCheckPolicy::Manual);
     spellCheckerLanguage->setEnabled(false);
     spellCheckerLanguage->setModel(spellCheckerLanguagesModel);
@@ -1041,7 +1067,14 @@ void SettingsView::Implementation::initApplicationCard()
         applicationCardLayout->addLayout(layout, itemIndex++, 0);
     }
     applicationCardLayout->addWidget(showDocumentsPages, itemIndex++, 0);
-    applicationCardLayout->addWidget(useTypewriterSound, itemIndex++, 0);
+    {
+        typingSoundPack->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
+        auto layout = makeLayout();
+        layout->addWidget(useTypewriterSound, 0, Qt::AlignCenter);
+        layout->addWidget(typingSoundPack);
+        applicationCardLayout->addLayout(layout, itemIndex++, 0);
+    }
     applicationCardLayout->addWidget(useTypewriterScrolling, itemIndex++, 0);
     applicationCardLayout->addWidget(focusCurrentParagraph, itemIndex++, 0);
     applicationCardLayout->addWidget(highlightCurrentLine, itemIndex++, 0);
@@ -1773,6 +1806,8 @@ SettingsView::SettingsView(QWidget* _parent)
     //
     // Приложение
     //
+    connect(d->useTypewriterSound, &CheckBox::checkedChanged, d->typingSoundPack,
+            &ComboBox::setEnabled);
     connect(d->useSpellChecker, &CheckBox::checkedChanged, d->spellCheckerLanguage,
             &ComboBox::setEnabled);
     connect(d->saveBackups, &CheckBox::checkedChanged, d->backupsFolderPath,
@@ -1830,6 +1865,11 @@ SettingsView::SettingsView(QWidget* _parent)
             &SettingsView::applicationShowDocumentsPagesChanged);
     connect(d->useTypewriterSound, &CheckBox::checkedChanged, this,
             &SettingsView::applicationUseTypewriterSoundChanged);
+    connect(d->typingSoundPack, &ComboBox::currentIndexChanged, this,
+            [this](const QModelIndex& _index) {
+                emit applicationTypingSoundPackChanged(
+                    _index.data(kTypingSoundPackRole).toString());
+            });
     connect(d->useSpellChecker, &CheckBox::checkedChanged, this, [this](bool _checked) {
         emit applicationUseSpellCheckerChanged(_checked);
         if (_checked) {
@@ -3304,6 +3344,17 @@ void SettingsView::setApplicationFocusCurrentParagraph(bool _focus)
     d->focusCurrentParagraph->setChecked(_focus);
 }
 
+void SettingsView::setApplicationTypingSoundPack(const QString& _pack)
+{
+    for (int row = 0; row < d->typingSoundPacksModel->rowCount(); ++row) {
+        auto item = d->typingSoundPacksModel->item(row);
+        if (item->data(kTypingSoundPackRole).toString() == _pack) {
+            d->typingSoundPack->setCurrentIndex(item->index());
+            break;
+        }
+    }
+}
+
 void SettingsView::setApplicationUseTypewriterScrolling(bool _use)
 {
     d->useTypewriterScrolling->setChecked(_use);
@@ -4131,7 +4182,16 @@ void SettingsView::updateTranslations()
     d->backupsQty->setLabel(tr("Qty"));
     d->applicationTextEditingTitle->setText(tr("Text editing"));
     d->showDocumentsPages->setText(tr("Show documents pages"));
-    d->useTypewriterSound->setText(tr("Use typewriter sound for keys pressing"));
+    d->useTypewriterSound->setText(tr("Play a sound while typing"));
+    d->typingSoundPack->setLabel(tr("Sound"));
+    {
+        const QVector<QString> names = { tr("Typewriter"), tr("Mechanical keyboard"),
+                                         tr("Funny sounds"), tr("Piano"),
+                                         tr("Drums"),        tr("Violin") };
+        for (int row = 0; row < names.size(); ++row) {
+            d->typingSoundPacksModel->item(row)->setText(names.at(row));
+        }
+    }
     d->useSpellChecker->setText(tr("Spell check"));
     d->spellCheckerLanguage->setLabel(tr("Spelling dictionary"));
     {
@@ -4837,6 +4897,7 @@ void SettingsView::designSystemChangeEvent(DesignSystemChangeEvent* _event)
     for (auto textField : std::vector<TextField*>{
              d->backupsFolderPath,
              d->backupsQty,
+             d->typingSoundPack,
              d->spellCheckerLanguage,
              //
              d->simpleTextEditorDefaultTemplate,
@@ -4880,6 +4941,7 @@ void SettingsView::designSystemChangeEvent(DesignSystemChangeEvent* _event)
                                       isLeftToRight() ? 0 : DesignSystem::layout().px24(), 0 });
     }
     for (auto combobox : {
+             d->typingSoundPack,
              d->spellCheckerLanguage,
              d->simpleTextEditorDefaultTemplate,
              d->screenplayEditorDefaultTemplate,

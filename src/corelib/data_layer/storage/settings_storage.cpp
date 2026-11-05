@@ -113,6 +113,7 @@ SettingsStorage::Implementation::Implementation()
     defaultSettings.insert(kApplicationBackupsQtyKey, 7);
     defaultSettings.insert(kApplicationShowDocumentsPagesKey, true);
     defaultSettings.insert(kApplicationUseTypewriterSoundKey, false);
+    defaultSettings.insert(kApplicationTypingSoundPackKey, QStringLiteral("typewriter"));
     defaultSettings.insert(kApplicationUseSpellCheckerKey, false);
     defaultSettings.insert(kApplicationHighlightCurrentLineKey, false);
     defaultSettings.insert(kApplicationFocusCurrentParagraphKey, false);
