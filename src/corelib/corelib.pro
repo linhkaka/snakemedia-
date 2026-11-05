@@ -243,6 +243,7 @@ SOURCES += \
     business_layer/export/novel/novel_markdown_exporter.cpp \
     business_layer/export/novel/novel_pdf_exporter.cpp \
     business_layer/export/screenplay/screenplay_docx_exporter.cpp \
+    business_layer/export/screenplay/screenplay_dossier.cpp \
     business_layer/export/screenplay/screenplay_exporter.cpp \
     business_layer/export/screenplay/screenplay_fdx_exporter.cpp \
     business_layer/export/screenplay/screenplay_fountain_exporter.cpp \
@@ -621,6 +622,7 @@ HEADERS += \
     business_layer/export/novel/novel_markdown_exporter.h \
     business_layer/export/novel/novel_pdf_exporter.h \
     business_layer/export/screenplay/screenplay_docx_exporter.h \
+    business_layer/export/screenplay/screenplay_dossier.h \
     business_layer/export/screenplay/screenplay_export_options.h \
     business_layer/export/screenplay/screenplay_exporter.h \
     business_layer/export/screenplay/screenplay_fdx_exporter.h \

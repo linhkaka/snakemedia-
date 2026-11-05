@@ -18,6 +18,7 @@ class ProjectManager;
  * text is compared with the text of the last sync to not overwrite edits made in Google Docs.
  * Pull: the Doc is exported as DOCX, read by ScreenplayGoogleDocImporter and added as a new draft.
  * A Doc pushed by an older version holds Fountain text and is still pulled as Fountain.
+ * Title page, logline, synopsis and treatment go to a second Doc in the same folder, one way only.
  * While a project is open the app looks for changes in its Docs and offers to pull them.
  *
  * Mapping between a document and its Google Doc is kept in the application settings, the project

@@ -23061,6 +23061,38 @@ Nếu bạn làm việc liên tục, dự án được lưu mỗi 3 phút.</tran
             <source>Pull</source>
             <translation>Kéo về</translation>
         </message>
+        <message>
+            <source>Title page</source>
+            <translation>Trang bìa (Title page)</translation>
+        </message>
+        <message>
+            <source>Logline</source>
+            <translation>Logline</translation>
+        </message>
+        <message>
+            <source>Synopsis</source>
+            <translation>Tóm tắt (Synopsis)</translation>
+        </message>
+        <message>
+            <source>Treatment</source>
+            <translation>Treatment</translation>
+        </message>
+        <message>
+            <source>Dossier</source>
+            <translation>Hồ sơ</translation>
+        </message>
+        <message>
+            <source>Somebody changed the Google Doc "%1". The title page, logline, synopsis and treatment are not pulled into the app. Overwrite the changes with the text from the app?</source>
+            <translation>Có người vừa sửa Google Doc "%1". Trang bìa, logline, synopsis và treatment không được kéo về app. Ghi đè các thay đổi đó bằng nội dung trong app không?</translation>
+        </message>
+        <message>
+            <source>Keep the changes</source>
+            <translation>Giữ thay đổi</translation>
+        </message>
+        <message>
+            <source>The title page, logline, synopsis and treatment are in the Google Doc "%1" in the same folder. Changes made there are not pulled into the app.</source>
+            <translation>Trang bìa, logline, synopsis và treatment nằm trong Google Doc "%1" cùng thư mục. Những gì sửa ở đó sẽ không được kéo về app.</translation>
+        </message>
     </context>
     <context>
         <name>ManagementLayer::GoogleAccountCard</name>

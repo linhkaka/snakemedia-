@@ -6,6 +6,7 @@
 
 #include <business_layer/document/screenplay/text/screenplay_text_document.h>
 #include <business_layer/export/screenplay/screenplay_docx_exporter.h>
+#include <business_layer/export/screenplay/screenplay_dossier.h>
 #include <business_layer/export/screenplay/screenplay_export_options.h>
 #include <business_layer/import/fountain_text_normalizer.h>
 #include <business_layer/import/import_options.h>
@@ -13,7 +14,10 @@
 #include <business_layer/import/screenplay/screenplay_google_doc_importer.h>
 #include <business_layer/model/screenplay/screenplay_information_model.h>
 #include <business_layer/model/screenplay/text/screenplay_text_model.h>
+#include <business_layer/model/text/text_model_text_item.h>
+#include <business_layer/templates/text_template.h>
 #include <data_layer/storage/storage_facade.h>
+#include <domain/document_object.h>
 #include <ui/widgets/dialog/dialog.h>
 #include <ui/widgets/dialog/standard_dialog.h>
 
@@ -39,6 +43,7 @@ namespace {
 const QString kRootFolderName = QStringLiteral("Jenny Script");
 const QString kDocxMimeType = QStringLiteral(
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+const QString kHtmlMimeType = QStringLiteral("text/html; charset=UTF-8");
 constexpr int kChangesCheckIntervalMs = 60 * 1000;
 const QString kDocumentUuidProperty = QStringLiteral("jsDocumentUuid");
 
@@ -57,6 +62,65 @@ const QString kFormatKey = QStringLiteral("format");
 const QString kDocxFormat = QStringLiteral("docx");
 const QString kSeenModifiedTimeKey = QStringLiteral("seen-modified-time");
 const QString kOfferedHashKey = QStringLiteral("offered-hash");
+const QString kDossierFileIdKey = QStringLiteral("dossier-file-id");
+const QString kDossierHashKey = QStringLiteral("dossier-hash");
+
+void forEachParagraph(const BusinessLayer::TextModelItem* _item,
+                      const std::function<void(const BusinessLayer::TextModelTextItem*)>& _action)
+{
+    for (int row = 0; row < _item->childCount(); ++row) {
+        const auto child = _item->childAt(row);
+        if (child->type() == BusinessLayer::TextModelItemType::Text) {
+            _action(static_cast<const BusinessLayer::TextModelTextItem*>(child));
+        } else {
+            forEachParagraph(child, _action);
+        }
+    }
+}
+
+QVector<BusinessLayer::DossierParagraph> paragraphsOf(BusinessLayer::AbstractModel* _model)
+{
+    QVector<BusinessLayer::DossierParagraph> paragraphs;
+    if (const auto model = qobject_cast<BusinessLayer::TextModel*>(_model); model != nullptr) {
+        forEachParagraph(model->itemForIndex({}),
+                         [&paragraphs](const BusinessLayer::TextModelTextItem* _paragraph) {
+                             paragraphs.append({ _paragraph->text(), false });
+                         });
+    }
+    return paragraphs;
+}
+
+/**
+ * @brief Headings and beats, it is what the treatment view of the app shows. A screenplay without
+ *        beats has no treatment, only a list of its scenes.
+ */
+QVector<BusinessLayer::DossierParagraph> treatmentOf(BusinessLayer::ScreenplayTextModel* _model)
+{
+    using BusinessLayer::TextParagraphType;
+
+    QVector<BusinessLayer::DossierParagraph> paragraphs;
+    bool hasBeats = false;
+    forEachParagraph(_model->itemForIndex({}),
+                     [&paragraphs, &hasBeats](const BusinessLayer::TextModelTextItem* _paragraph) {
+                         switch (_paragraph->paragraphType()) {
+                         case TextParagraphType::ActHeading:
+                         case TextParagraphType::SequenceHeading:
+                         case TextParagraphType::SceneHeading: {
+                             paragraphs.append({ _paragraph->text(), true });
+                             break;
+                         }
+                         case TextParagraphType::BeatHeading: {
+                             hasBeats = hasBeats || !_paragraph->text().trimmed().isEmpty();
+                             paragraphs.append({ _paragraph->text(), false });
+                             break;
+                         }
+                         default: {
+                             break;
+                         }
+                         }
+                     });
+    return hasBeats ? paragraphs : QVector<BusinessLayer::DossierParagraph>();
+}
 
 /**
  * @brief Hash of a Doc text, insensitive to line endings and trailing spaces added by Google Docs
@@ -117,11 +181,26 @@ public:
     QByteArray exportDocx(BusinessLayer::ScreenplayTextModel* _model) const;
 
     void push(const QUuid& _documentUuid);
+    void withProjectFolder(const std::function<void(const QString&)>& _action,
+                           const std::function<void(const GoogleDriveError&)>& _fail);
     void uploadNew(const QUuid& _documentUuid, const QByteArray& _content);
     void updateExisting(const QUuid& _documentUuid, const QString& _fileId,
                         const QByteArray& _content);
     void storeSyncState(const QUuid& _documentUuid, const GoogleDriveFile& _file,
                         bool _showPushedMessage);
+    QByteArray dossierHtml(const QUuid& _documentUuid) const;
+    QString documentNameFor(const QUuid& _documentUuid, const QString& _suffix) const;
+    /**
+     * @brief Push the second Doc and call back with its name, empty when it was not pushed
+     */
+    void pushDossier(const QUuid& _documentUuid,
+                     const std::function<void(const QString&)>& _done);
+    void updateDossier(const QUuid& _documentUuid, const QString& _fileId,
+                       const QByteArray& _content,
+                       const std::function<void(const QString&)>& _done);
+    void storeDossierState(const QUuid& _documentUuid, const GoogleDriveFile& _file,
+                           const std::function<void(const QString&)>& _done);
+    void showPushedMessage(const GoogleDriveFile& _file, const QString& _dossierName);
     void pull(const QUuid& _documentUuid);
     void pullDocx(const QUuid& _documentUuid, const QString& _fileId, const QString& _text);
     void addPulledDraft(const QUuid& _documentUuid, const QString& _screenplayXml,
@@ -376,57 +455,72 @@ void GoogleDocsManager::Implementation::push(const QUuid& _documentUuid)
     });
 }
 
-void GoogleDocsManager::Implementation::uploadNew(const QUuid& _documentUuid,
-                                                  const QByteArray& _content)
+void GoogleDocsManager::Implementation::withProjectFolder(
+    const std::function<void(const QString&)>& _action,
+    const std::function<void(const GoogleDriveError&)>& _fail)
 {
-    isBusy = true;
-    const auto model = screenplayModel(_documentUuid);
     const QString projectName = projectManager->projectName();
-    const QString screenplayName = model != nullptr && model->informationModel() != nullptr
-        ? model->informationModel()->name()
-        : QString();
-    QStringList documentNameParts;
-    if (!projectName.isEmpty()) {
-        documentNameParts.append(projectName);
-    }
-    if (!screenplayName.isEmpty()) {
-        documentNameParts.append(screenplayName);
-    }
-    const QString documentName = documentNameParts.join(QStringLiteral(" - "));
-
-    auto fail = [this](const GoogleDriveError& _error) {
-        isBusy = false;
-        showError(tr("Push to Google Docs"), _error);
-    };
     driveClient->findOrCreateFolder(
         kRootFolderName, {},
-        [this, _documentUuid, _content, projectName, documentName,
-         fail](const GoogleDriveFile& _rootFolder, const GoogleDriveError& _error) {
+        [this, projectName, _action, _fail](const GoogleDriveFile& _rootFolder,
+                                            const GoogleDriveError& _error) {
             if (_error.isError()) {
-                fail(_error);
+                _fail(_error);
                 return;
             }
             driveClient->findOrCreateFolder(
                 projectName.isEmpty() ? tr("Untitled project") : projectName, _rootFolder.id,
-                [this, _documentUuid, _content, documentName,
-                 fail](const GoogleDriveFile& _projectFolder, const GoogleDriveError& _error) {
+                [_action, _fail](const GoogleDriveFile& _projectFolder,
+                                 const GoogleDriveError& _error) {
+                    if (_error.isError()) {
+                        _fail(_error);
+                        return;
+                    }
+                    _action(_projectFolder.id);
+                });
+        });
+}
+
+QString GoogleDocsManager::Implementation::documentNameFor(const QUuid& _documentUuid,
+                                                           const QString& _suffix) const
+{
+    const auto model = screenplayModel(_documentUuid);
+    QStringList parts;
+    if (const auto projectName = projectManager->projectName(); !projectName.isEmpty()) {
+        parts.append(projectName);
+    }
+    if (!_suffix.isEmpty()) {
+        parts.append(_suffix);
+    } else if (model != nullptr && model->informationModel() != nullptr
+               && !model->informationModel()->name().isEmpty()) {
+        parts.append(model->informationModel()->name());
+    }
+    return parts.join(QStringLiteral(" - "));
+}
+
+void GoogleDocsManager::Implementation::uploadNew(const QUuid& _documentUuid,
+                                                  const QByteArray& _content)
+{
+    isBusy = true;
+    const auto fail = [this](const GoogleDriveError& _error) {
+        isBusy = false;
+        showError(tr("Push to Google Docs"), _error);
+    };
+    withProjectFolder(
+        [this, _documentUuid, _content, fail](const QString& _folderId) {
+            driveClient->createDocument(
+                documentNameFor(_documentUuid, {}), _folderId, _content, kDocxMimeType,
+                { { kDocumentUuidProperty, _documentUuid.toString(QUuid::WithoutBraces) } },
+                [this, _documentUuid, fail](const GoogleDriveFile& _file,
+                                            const GoogleDriveError& _error) {
                     if (_error.isError()) {
                         fail(_error);
                         return;
                     }
-                    driveClient->createDocument(
-                        documentName, _projectFolder.id, _content, kDocxMimeType,
-                        { { kDocumentUuidProperty, _documentUuid.toString(QUuid::WithoutBraces) } },
-                        [this, _documentUuid, fail](const GoogleDriveFile& _file,
-                                                    const GoogleDriveError& _error) {
-                            if (_error.isError()) {
-                                fail(_error);
-                                return;
-                            }
-                            storeSyncState(_documentUuid, _file, true);
-                        });
+                    storeSyncState(_documentUuid, _file, true);
                 });
-        });
+        },
+        fail);
 }
 
 void GoogleDocsManager::Implementation::updateExisting(const QUuid& _documentUuid,
@@ -462,28 +556,186 @@ void GoogleDocsManager::Implementation::storeSyncState(const QUuid& _documentUui
         _file.id, "text/plain",
         [this, _documentUuid, _file, _showPushedMessage](const QByteArray& _text,
                                                          const GoogleDriveError& _error) {
-            isBusy = false;
             if (!_error.isError()) {
                 setSettingsValue(settingsKey(_documentUuid, kTextHashKey),
                                  textHash(QString::fromUtf8(_text)));
             }
             if (!_showPushedMessage) {
+                isBusy = false;
                 return;
             }
 
-            static constexpr int closeButtonId = 0;
-            static constexpr int openButtonId = 1;
-            ask(tr("Pushed to Google Docs"),
-                tr("The screenplay is in the Google Doc \"%1\" (folder \"%2\" in your Google "
-                   "Drive).")
-                    .arg(_file.name, kRootFolderName),
-                { { closeButtonId, tr("Close"), Dialog::RejectButton },
-                  { openButtonId, tr("Open in browser"), Dialog::AcceptButton } },
-                [_file](int _buttonId) {
-                    if (_buttonId == openButtonId) {
-                        QDesktopServices::openUrl(documentUrl(_file.id));
+            pushDossier(_documentUuid, [this, _file](const QString& _dossierName) {
+                isBusy = false;
+                showPushedMessage(_file, _dossierName);
+            });
+        });
+}
+
+QByteArray GoogleDocsManager::Implementation::dossierHtml(const QUuid& _documentUuid) const
+{
+    const auto model = screenplayModel(_documentUuid);
+    if (model == nullptr) {
+        return {};
+    }
+
+    QVector<BusinessLayer::DossierSection> sections;
+    sections.append({ tr("Title page"),
+                      paragraphsOf(projectManager->siblingModelForDocument(
+                          _documentUuid, Domain::DocumentObjectType::ScreenplayTitlePage)) });
+    if (const auto information = model->informationModel(); information != nullptr) {
+        sections.append({ tr("Logline"), { { information->logline(), false } } });
+    }
+    sections.append({ tr("Synopsis"),
+                      paragraphsOf(projectManager->siblingModelForDocument(
+                          _documentUuid, Domain::DocumentObjectType::ScreenplaySynopsis)) });
+    sections.append({ tr("Treatment"), treatmentOf(model) });
+    return BusinessLayer::screenplayDossierHtml(sections);
+}
+
+void GoogleDocsManager::Implementation::pushDossier(
+    const QUuid& _documentUuid, const std::function<void(const QString&)>& _done)
+{
+    const auto content = dossierHtml(_documentUuid);
+    if (content.isEmpty()) {
+        _done({});
+        return;
+    }
+
+    const auto fail = [this, _done](const GoogleDriveError& _error) {
+        showError(tr("Push to Google Docs"), _error);
+        _done({});
+    };
+    const auto create = [this, _documentUuid, content, fail, _done] {
+        withProjectFolder(
+            [this, _documentUuid, content, fail, _done](const QString& _folderId) {
+                driveClient->createDocument(
+                    documentNameFor(_documentUuid, tr("Dossier")), _folderId, content,
+                    kHtmlMimeType, {},
+                    [this, _documentUuid, fail, _done](const GoogleDriveFile& _file,
+                                                       const GoogleDriveError& _error) {
+                        if (_error.isError()) {
+                            fail(_error);
+                            return;
+                        }
+                        storeDossierState(_documentUuid, _file, _done);
+                    });
+            },
+            fail);
+    };
+
+    const auto fileId = settingsValue(settingsKey(_documentUuid, kDossierFileIdKey)).toString();
+    if (fileId.isEmpty()) {
+        create();
+        return;
+    }
+
+    driveClient->fileMetadata(fileId, [this, _documentUuid, fileId, content, fail, create, _done](
+                                          const GoogleDriveFile& _file,
+                                          const GoogleDriveError& _error) {
+        if (_error.type == GoogleDriveError::Type::NotFound || (!_error.isError() && _file.trashed)) {
+            create();
+            return;
+        }
+        if (_error.isError()) {
+            fail(_error);
+            return;
+        }
+
+        driveClient->exportFile(fileId, "text/plain", [this, _documentUuid, _file, fileId, content,
+                                                       fail, _done](const QByteArray& _text,
+                                                                    const GoogleDriveError& _error) {
+            if (_error.isError()) {
+                fail(_error);
+                return;
+            }
+
+            const auto lastHash
+                = settingsValue(settingsKey(_documentUuid, kDossierHashKey)).toString();
+            if (lastHash.isEmpty() || textHash(QString::fromUtf8(_text)) == lastHash) {
+                updateDossier(_documentUuid, fileId, content, _done);
+                return;
+            }
+
+            //
+            // This Doc is not pulled, so edits made there would be lost without a trace
+            //
+            static constexpr int keepButtonId = 0;
+            static constexpr int overwriteButtonId = 1;
+            isBusy = false;
+            ask(tr("The Google Doc was edited"),
+                tr("Somebody changed the Google Doc \"%1\". The title page, logline, synopsis and "
+                   "treatment are not pulled into the app. Overwrite the changes with the text from "
+                   "the app?")
+                    .arg(_file.name),
+                { { keepButtonId, tr("Keep the changes"), Dialog::RejectButton },
+                  { overwriteButtonId, tr("Overwrite"), Dialog::AcceptCriticalButton } },
+                [this, _documentUuid, fileId, content, _done](int _buttonId) {
+                    isBusy = true;
+                    if (_buttonId == overwriteButtonId) {
+                        updateDossier(_documentUuid, fileId, content, _done);
+                    } else {
+                        _done({});
                     }
                 });
+        });
+    });
+}
+
+void GoogleDocsManager::Implementation::updateDossier(
+    const QUuid& _documentUuid, const QString& _fileId, const QByteArray& _content,
+    const std::function<void(const QString&)>& _done)
+{
+    driveClient->updateDocumentContent(
+        _fileId, _content, kHtmlMimeType,
+        [this, _documentUuid, _done](const GoogleDriveFile& _file, const GoogleDriveError& _error) {
+            if (_error.isError()) {
+                showError(tr("Push to Google Docs"), _error);
+                _done({});
+                return;
+            }
+            storeDossierState(_documentUuid, _file, _done);
+        });
+}
+
+void GoogleDocsManager::Implementation::storeDossierState(
+    const QUuid& _documentUuid, const GoogleDriveFile& _file,
+    const std::function<void(const QString&)>& _done)
+{
+    setSettingsValue(settingsKey(_documentUuid, kDossierFileIdKey), _file.id);
+    driveClient->exportFile(_file.id, "text/plain",
+                            [_documentUuid, _file, _done](const QByteArray& _text,
+                                                          const GoogleDriveError& _error) {
+                                if (!_error.isError()) {
+                                    setSettingsValue(settingsKey(_documentUuid, kDossierHashKey),
+                                                     textHash(QString::fromUtf8(_text)));
+                                }
+                                _done(_file.name);
+                            });
+}
+
+void GoogleDocsManager::Implementation::showPushedMessage(const GoogleDriveFile& _file,
+                                                          const QString& _dossierName)
+{
+    auto text = tr("The screenplay is in the Google Doc \"%1\" (folder \"%2\" in your Google "
+                   "Drive).")
+                    .arg(_file.name, kRootFolderName);
+    if (!_dossierName.isEmpty()) {
+        text += "\n\n"
+            + tr("The title page, logline, synopsis and treatment are in the Google Doc \"%1\" in "
+                 "the same folder. Changes made there are not pulled into the app.")
+                  .arg(_dossierName);
+    }
+
+    static constexpr int closeButtonId = 0;
+    static constexpr int openButtonId = 1;
+    ask(tr("Pushed to Google Docs"), text,
+        { { closeButtonId, tr("Close"), Dialog::RejectButton },
+          { openButtonId, tr("Open in browser"), Dialog::AcceptButton } },
+        [_file](int _buttonId) {
+            if (_buttonId == openButtonId) {
+                QDesktopServices::openUrl(documentUrl(_file.id));
+            }
         });
 }
 

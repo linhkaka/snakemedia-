@@ -5441,6 +5441,22 @@ BusinessLayer::AbstractModel* ProjectManager::modelForDocument(const QUuid& _doc
     return d->modelsFacade.modelFor(_documentUuid);
 }
 
+BusinessLayer::AbstractModel* ProjectManager::siblingModelForDocument(
+    const QUuid& _documentUuid, Domain::DocumentObjectType _type) const
+{
+    const auto item = d->projectStructureModel->itemForUuid(_documentUuid);
+    if (item == nullptr || item->parent() == nullptr) {
+        return nullptr;
+    }
+    for (int row = 0; row < item->parent()->childCount(); ++row) {
+        const auto sibling = item->parent()->childAt(row);
+        if (sibling->type() == _type) {
+            return d->modelsFacade.modelFor(sibling->uuid());
+        }
+    }
+    return nullptr;
+}
+
 QVector<QUuid> ProjectManager::screenplayDocuments() const
 {
     QVector<QUuid> documents;

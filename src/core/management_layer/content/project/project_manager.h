@@ -243,6 +243,8 @@ public:
      */
     BusinessLayer::AbstractModel* modelForDocument(const QUuid& _documentUuid) const;
     QVector<QUuid> screenplayDocuments() const;
+    BusinessLayer::AbstractModel* siblingModelForDocument(const QUuid& _documentUuid,
+                                                          Domain::DocumentObjectType _type) const;
     void addDocumentDraft(const QUuid& _documentUuid, const QString& _name,
                           const QByteArray& _content);
 

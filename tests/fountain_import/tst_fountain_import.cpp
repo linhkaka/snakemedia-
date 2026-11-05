@@ -1,3 +1,4 @@
+#include <business_layer/export/screenplay/screenplay_dossier.h>
 #include <business_layer/import/fountain_text_normalizer.h>
 #include <business_layer/import/import_options.h>
 #include <business_layer/import/screenplay/screenplay_fountain_importer.h>
@@ -98,6 +99,27 @@ class FountainImportTest : public QObject
     Q_OBJECT
 
 private slots:
+    void dossierLeavesOutEmptySections()
+    {
+        using BusinessLayer::screenplayDossierHtml;
+        QVERIFY(screenplayDossierHtml({}).isEmpty());
+        QVERIFY(screenplayDossierHtml({ { "Logline", { { "  ", false } } } }).isEmpty());
+
+        const auto html = QString::fromUtf8(screenplayDossierHtml(
+            { { "Empty", {} },
+              { "Logline", { { QString::fromUtf8("Cóc mẹ <kiện> cá trê & đàn con"), false } } },
+              { "Treatment", { { "SCENE", true }, { QString(), false } } } }));
+        QVERIFY(!html.contains("Empty"));
+        QVERIFY(html.contains(QString::fromUtf8("Cóc mẹ &lt;kiện&gt; cá trê &amp; đàn con")));
+        QVERIFY(html.contains("<b>SCENE</b>"));
+        QVERIFY(html.contains("&nbsp;"));
+        //
+        // A new page for every section but the first one
+        //
+        QCOMPARE(html.count("page-break-before"), 1);
+        QVERIFY(html.indexOf("Logline") < html.indexOf("page-break-before"));
+    }
+
     void googleDocNewParagraphsAreDetected()
     {
         const BusinessLayer::ScreenplayGoogleDocImporter importer;
