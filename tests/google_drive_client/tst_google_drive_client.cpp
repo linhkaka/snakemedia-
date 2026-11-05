@@ -364,6 +364,49 @@ private slots:
                  QByteArray("Bearer new-token"));
     }
 
+    void missingTokenIsRefreshedBeforeTheRequest()
+    {
+        FakeNetworkAccessManager nam;
+        nam.responses = { { 200, fileJson("doc-1") } };
+        GoogleDriveClient client(&nam);
+        prepareClient(nam, client);
+
+        QString token;
+        int refreshCount = 0;
+        client.setAccessTokenProvider([&token] { return token; });
+        client.setTokenRefresher([&](std::function<void(bool)> _done) {
+            ++refreshCount;
+            token = QStringLiteral("new-token");
+            _done(true);
+        });
+
+        FileResult result;
+        client.fileMetadata("doc-1", store(result));
+        QTRY_VERIFY(result.done);
+
+        QVERIFY(!result.error.isError());
+        QCOMPARE(refreshCount, 1);
+        QCOMPARE(nam.requests.size(), 1);
+        QCOMPARE(nam.requests.at(0).request.rawHeader("Authorization"),
+                 QByteArray("Bearer new-token"));
+    }
+
+    void missingTokenWithFailedRefreshSendsNothing()
+    {
+        FakeNetworkAccessManager nam;
+        GoogleDriveClient client(&nam);
+        prepareClient(nam, client);
+        client.setAccessTokenProvider([] { return QString(); });
+        client.setTokenRefresher([](std::function<void(bool)> _done) { _done(false); });
+
+        FileResult result;
+        client.fileMetadata("doc-1", store(result));
+        QTRY_VERIFY(result.done);
+
+        QCOMPARE(result.error.type, GoogleDriveError::Type::Unauthorized);
+        QCOMPARE(nam.requests.size(), 0);
+    }
+
     void unauthorizedAfterRefreshIsReported()
     {
         FakeNetworkAccessManager nam;

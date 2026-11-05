@@ -42,6 +42,10 @@ const QUrl kAuthorizationUrl(QStringLiteral("https://accounts.google.com/o/oauth
 const QUrl kTokenUrl(QStringLiteral("https://oauth2.googleapis.com/token"));
 const QUrl kRevokeUrl(QStringLiteral("https://oauth2.googleapis.com/revoke"));
 const QByteArray kDriveFileScope = QByteArrayLiteral("https://www.googleapis.com/auth/drive.file");
+//
+// Requests of the Drive client set their own timeout, this one is for the requests of the OAuth flow
+//
+constexpr int kOAuthRequestTimeoutMs = 30 * 1000;
 
 /**
  * @brief Read the email claim from the payload of an OpenID Connect id token
@@ -83,6 +87,7 @@ public:
 GoogleAuthManager::Implementation::Implementation(GoogleAuthManager* _q)
     : q(_q)
 {
+    networkAccessManager.setTransferTimeout(kOAuthRequestTimeoutMs);
     flow.setNetworkAccessManager(&networkAccessManager);
     flow.setAuthorizationUrl(kAuthorizationUrl);
     flow.setTokenUrl(kTokenUrl);
@@ -180,6 +185,14 @@ GoogleAuthManager::GoogleAuthManager(QObject* _parent)
     connect(&d->flow, &QAbstractOAuth::authorizeWithBrowser, this, &QDesktopServices::openUrl);
     connect(&d->flow, &QAbstractOAuth2::refreshTokenChanged, this,
             [this](const QString& _refreshToken) { d->storeRefreshToken(_refreshToken); });
+    //
+    // A new access token is what the waiting requests need, don't depend on the status change
+    //
+    connect(&d->flow, &QAbstractOAuth::tokenChanged, this, [this](const QString& _token) {
+        if (!_token.isEmpty()) {
+            d->finishRefresh(true);
+        }
+    });
     connect(&d->flow, &QAbstractOAuth::granted, this, [this] {
         //
         // Google consent screen lets the user untick single permissions, without Drive access the

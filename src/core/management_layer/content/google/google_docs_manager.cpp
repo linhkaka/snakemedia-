@@ -273,7 +273,12 @@ void GoogleDocsManager::Implementation::showError(const QString& _title,
         break;
     }
     case GoogleDriveError::Type::Unauthorized: {
-        text = tr("Google sign in has expired. Please sign in again.");
+        //
+        // An expired sign in was cleared already, so otherwise the refresh could not reach Google
+        //
+        text = authManager->isSignedIn()
+            ? tr("Can't connect to Google. Check the internet connection and try again.")
+            : tr("Google sign in has expired. Please sign in again.");
         break;
     }
     case GoogleDriveError::Type::Forbidden: {

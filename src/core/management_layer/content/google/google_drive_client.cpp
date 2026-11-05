@@ -232,8 +232,31 @@ void GoogleDriveClient::Implementation::send(Request _request)
         return;
     }
 
-    QNetworkRequest networkRequest(_request.url);
     const QString token = accessTokenProvider ? accessTokenProvider() : QString();
+
+    //
+    // After a restart the user is signed in with the stored refresh token, but there is no access
+    // token yet. Google answers a request without a token with 403, not 401, so get it first
+    //
+    if (token.isEmpty() && accessTokenProvider && tokenRefresher && !_request.isTokenRefreshed) {
+        _request.isTokenRefreshed = true;
+        QPointer<GoogleDriveClient> client(q);
+        tokenRefresher([this, client, _request](bool _refreshed) {
+            if (client.isNull()) {
+                return;
+            }
+            if (_refreshed) {
+                send(_request);
+                return;
+            }
+            GoogleDriveError error;
+            error.type = GoogleDriveError::Type::Unauthorized;
+            _request.callback({}, error);
+        });
+        return;
+    }
+
+    QNetworkRequest networkRequest(_request.url);
     if (!token.isEmpty()) {
         networkRequest.setRawHeader("Authorization", "Bearer " + token.toUtf8());
     }
