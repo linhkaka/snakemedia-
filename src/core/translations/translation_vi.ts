@@ -22986,8 +22986,8 @@ Nếu bạn làm việc liên tục, dự án được lưu mỗi 3 phút.</tran
             <translation>Đã đẩy lên Google Docs</translation>
         </message>
         <message>
-            <source>The screenplay is in the Google Doc "%1" (folder "%2" in your Google Drive). Apply Fountainize in Google Docs to format it.</source>
-            <translation>Kịch bản nằm trong Google Doc "%1" (thư mục "%2" trong Google Drive của bạn). Chạy Fountainize trên Google Docs để dàn trang.</translation>
+            <source>The screenplay is in the Google Doc "%1" (folder "%2" in your Google Drive).</source>
+            <translation>Kịch bản nằm trong Google Doc "%1" (thư mục "%2" trong Google Drive của bạn).</translation>
         </message>
         <message>
             <source>Close</source>
@@ -23036,6 +23036,30 @@ Nếu bạn làm việc liên tục, dự án được lưu mỗi 3 phút.</tran
         <message>
             <source>Jenny Script has no access to Google Drive. Push again, sign in and tick the permission to see and edit the Google Drive files used with Jenny Script.</source>
             <translation>Jenny Script chưa có quyền truy cập Google Drive. Hãy bấm Đẩy lên lần nữa, đăng nhập và tick ô quyền xem, chỉnh sửa các tệp Google Drive dùng với Jenny Script.</translation>
+        </message>
+        <message>
+            <source>Can't prepare the screenplay for Google Docs.</source>
+            <translation>Không chuẩn bị được kịch bản để đưa lên Google Docs.</translation>
+        </message>
+        <message>
+            <source>Can't read the Google Doc.</source>
+            <translation>Không đọc được Google Doc.</translation>
+        </message>
+        <message>
+            <source>The Google Doc was changed</source>
+            <translation>Google Doc vừa có thay đổi</translation>
+        </message>
+        <message>
+            <source>Somebody changed the Google Doc "%1". Pull the changes into a new draft? The current text will not be changed.</source>
+            <translation>Có người vừa sửa Google Doc "%1". Kéo các thay đổi về thành bản nháp mới không? Nội dung hiện tại sẽ không bị đổi.</translation>
+        </message>
+        <message>
+            <source>Later</source>
+            <translation>Để sau</translation>
+        </message>
+        <message>
+            <source>Pull</source>
+            <translation>Kéo về</translation>
         </message>
     </context>
     <context>

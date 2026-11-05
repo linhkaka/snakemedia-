@@ -4,16 +4,20 @@
 #include "google_drive_client.h"
 #include "../project/project_manager.h"
 
+#include <business_layer/document/screenplay/text/screenplay_text_document.h>
+#include <business_layer/export/screenplay/screenplay_docx_exporter.h>
 #include <business_layer/export/screenplay/screenplay_export_options.h>
-#include <business_layer/export/screenplay/screenplay_fountain_exporter.h>
 #include <business_layer/import/fountain_text_normalizer.h>
+#include <business_layer/import/import_options.h>
 #include <business_layer/import/screenplay/screenplay_fountain_importer.h>
+#include <business_layer/import/screenplay/screenplay_google_doc_importer.h>
 #include <business_layer/model/screenplay/screenplay_information_model.h>
 #include <business_layer/model/screenplay/text/screenplay_text_model.h>
 #include <data_layer/storage/storage_facade.h>
 #include <ui/widgets/dialog/dialog.h>
 #include <ui/widgets/dialog/standard_dialog.h>
 
+#include <QApplication>
 #include <QCryptographicHash>
 #include <QDateTime>
 #include <QDesktopServices>
@@ -21,6 +25,7 @@
 #include <QFile>
 #include <QPointer>
 #include <QTemporaryDir>
+#include <QTimer>
 #include <QUrl>
 #include <QUuid>
 
@@ -32,7 +37,9 @@ namespace ManagementLayer {
 namespace {
 
 const QString kRootFolderName = QStringLiteral("Jenny Script");
-const QString kTextMimeType = QStringLiteral("text/plain; charset=UTF-8");
+const QString kDocxMimeType = QStringLiteral(
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+constexpr int kChangesCheckIntervalMs = 60 * 1000;
 const QString kDocumentUuidProperty = QStringLiteral("jsDocumentUuid");
 
 /**
@@ -46,6 +53,10 @@ QString settingsKey(const QUuid& _documentUuid, const QString& _name)
 const QString kFileIdKey = QStringLiteral("file-id");
 const QString kTextHashKey = QStringLiteral("text-hash");
 const QString kSyncedAtKey = QStringLiteral("synced-at");
+const QString kFormatKey = QStringLiteral("format");
+const QString kDocxFormat = QStringLiteral("docx");
+const QString kSeenModifiedTimeKey = QStringLiteral("seen-modified-time");
+const QString kOfferedHashKey = QStringLiteral("offered-hash");
 
 /**
  * @brief Hash of a Doc text, insensitive to line endings and trailing spaces added by Google Docs
@@ -62,6 +73,24 @@ QString textHash(const QString& _text)
     return QString::fromLatin1(
         QCryptographicHash::hash(text.toUtf8(), QCryptographicHash::Sha256).toHex());
 }
+
+/**
+ * @brief Google Docs lays out the pages itself, the "(MORE)" and "CONT'D" lines for the page breaks
+ *        of the app would end up in the middle of its pages and come back as text on pull
+ */
+class GoogleDocExporter : public BusinessLayer::ScreenplayDocxExporter
+{
+protected:
+    BusinessLayer::TextDocument* createDocument(
+        const BusinessLayer::ExportOptions& _exportOptions) const override
+    {
+        Q_UNUSED(_exportOptions)
+
+        auto document = new BusinessLayer::ScreenplayTextDocument;
+        document->setCorrectionOptions(false, false);
+        return document;
+    }
+};
 
 QUrl documentUrl(const QString& _fileId)
 {
@@ -85,7 +114,7 @@ public:
 
     void withSignIn(const std::function<void()>& _action);
     BusinessLayer::ScreenplayTextModel* screenplayModel(const QUuid& _documentUuid) const;
-    QByteArray exportFountain(BusinessLayer::ScreenplayTextModel* _model) const;
+    QByteArray exportDocx(BusinessLayer::ScreenplayTextModel* _model) const;
 
     void push(const QUuid& _documentUuid);
     void uploadNew(const QUuid& _documentUuid, const QByteArray& _content);
@@ -94,15 +123,28 @@ public:
     void storeSyncState(const QUuid& _documentUuid, const GoogleDriveFile& _file,
                         bool _showPushedMessage);
     void pull(const QUuid& _documentUuid);
+    void pullDocx(const QUuid& _documentUuid, const QString& _fileId, const QString& _text);
+    void addPulledDraft(const QUuid& _documentUuid, const QString& _screenplayXml,
+                        const QString& _text);
     void openInBrowser(const QUuid& _documentUuid);
+    void checkForChanges();
+    void checkNextDocument(QVector<QUuid> _documents, int _generation);
+    void offerPull(const QUuid& _documentUuid, const QString& _fileName);
 
     GoogleDocsManager* q = nullptr;
     QPointer<QWidget> parentWidget;
     ProjectManager* projectManager = nullptr;
     GoogleAuthManager* authManager = nullptr;
     GoogleDriveClient* driveClient = nullptr;
+    QTimer changesTimer;
     std::function<void()> actionAfterSignIn;
     bool isBusy = false;
+    bool isCheckingForChanges = false;
+    bool isPullOffered = false;
+    /**
+     * @brief Raised by every push and pull, a running check for changes is outdated then
+     */
+    int syncGeneration = 0;
 };
 
 GoogleDocsManager::Implementation::Implementation(GoogleDocsManager* _q, QWidget* _parentWidget,
@@ -223,7 +265,7 @@ BusinessLayer::ScreenplayTextModel* GoogleDocsManager::Implementation::screenpla
         projectManager->modelForDocument(_documentUuid));
 }
 
-QByteArray GoogleDocsManager::Implementation::exportFountain(
+QByteArray GoogleDocsManager::Implementation::exportDocx(
     BusinessLayer::ScreenplayTextModel* _model) const
 {
     QTemporaryDir directory;
@@ -232,10 +274,10 @@ QByteArray GoogleDocsManager::Implementation::exportFountain(
     }
 
     BusinessLayer::ScreenplayExportOptions options;
-    options.filePath = directory.filePath(QStringLiteral("screenplay.fountain"));
-    options.fileFormat = BusinessLayer::ExportFileFormat::Fountain;
+    options.filePath = directory.filePath(QStringLiteral("screenplay.docx"));
+    options.fileFormat = BusinessLayer::ExportFileFormat::Docx;
     //
-    // Title page is exported as plain paragraphs, it would come back as action on pull
+    // Title page would come back as action on pull
     //
     options.includeTitlePage = false;
     options.includeText = true;
@@ -249,8 +291,8 @@ QByteArray GoogleDocsManager::Implementation::exportFountain(
         options.footer = information->footer();
     }
 
-    const BusinessLayer::ScreenplayFountainExporter fountainExporter;
-    const BusinessLayer::ScreenplayExporter& exporter = fountainExporter;
+    const GoogleDocExporter docxExporter;
+    const BusinessLayer::ScreenplayExporter& exporter = docxExporter;
     exporter.exportTo(_model, options);
 
     QFile file(options.filePath);
@@ -266,12 +308,13 @@ void GoogleDocsManager::Implementation::push(const QUuid& _documentUuid)
     if (model == nullptr) {
         return;
     }
-    const auto content = exportFountain(model);
+    const auto content = exportDocx(model);
     if (content.isEmpty()) {
-        inform(tr("Push to Google Docs"), tr("Can't export the screenplay as Fountain text."));
+        inform(tr("Push to Google Docs"), tr("Can't prepare the screenplay for Google Docs."));
         return;
     }
 
+    ++syncGeneration;
     const auto fileId = settingsValue(settingsKey(_documentUuid, kFileIdKey)).toString();
     if (fileId.isEmpty()) {
         uploadNew(_documentUuid, content);
@@ -339,12 +382,17 @@ void GoogleDocsManager::Implementation::uploadNew(const QUuid& _documentUuid,
     isBusy = true;
     const auto model = screenplayModel(_documentUuid);
     const QString projectName = projectManager->projectName();
-    QString documentName = model != nullptr && model->informationModel() != nullptr
+    const QString screenplayName = model != nullptr && model->informationModel() != nullptr
         ? model->informationModel()->name()
         : QString();
-    if (documentName.isEmpty()) {
-        documentName = projectName;
+    QStringList documentNameParts;
+    if (!projectName.isEmpty()) {
+        documentNameParts.append(projectName);
     }
+    if (!screenplayName.isEmpty()) {
+        documentNameParts.append(screenplayName);
+    }
+    const QString documentName = documentNameParts.join(QStringLiteral(" - "));
 
     auto fail = [this](const GoogleDriveError& _error) {
         isBusy = false;
@@ -367,7 +415,7 @@ void GoogleDocsManager::Implementation::uploadNew(const QUuid& _documentUuid,
                         return;
                     }
                     driveClient->createDocument(
-                        documentName, _projectFolder.id, _content, kTextMimeType,
+                        documentName, _projectFolder.id, _content, kDocxMimeType,
                         { { kDocumentUuidProperty, _documentUuid.toString(QUuid::WithoutBraces) } },
                         [this, _documentUuid, fail](const GoogleDriveFile& _file,
                                                     const GoogleDriveError& _error) {
@@ -386,7 +434,7 @@ void GoogleDocsManager::Implementation::updateExisting(const QUuid& _documentUui
                                                        const QByteArray& _content)
 {
     driveClient->updateDocumentContent(
-        _fileId, _content, kTextMimeType,
+        _fileId, _content, kDocxMimeType,
         [this, _documentUuid](const GoogleDriveFile& _file, const GoogleDriveError& _error) {
             if (_error.isError()) {
                 isBusy = false;
@@ -401,7 +449,9 @@ void GoogleDocsManager::Implementation::storeSyncState(const QUuid& _documentUui
                                                        const GoogleDriveFile& _file,
                                                        bool _showPushedMessage)
 {
+    ++syncGeneration;
     setSettingsValue(settingsKey(_documentUuid, kFileIdKey), _file.id);
+    setSettingsValue(settingsKey(_documentUuid, kFormatKey), kDocxFormat);
     setSettingsValue(settingsKey(_documentUuid, kSyncedAtKey), QDateTime::currentDateTimeUtc());
 
     //
@@ -425,7 +475,7 @@ void GoogleDocsManager::Implementation::storeSyncState(const QUuid& _documentUui
             static constexpr int openButtonId = 1;
             ask(tr("Pushed to Google Docs"),
                 tr("The screenplay is in the Google Doc \"%1\" (folder \"%2\" in your Google "
-                   "Drive). Apply Fountainize in Google Docs to format it.")
+                   "Drive).")
                     .arg(_file.name, kRootFolderName),
                 { { closeButtonId, tr("Close"), Dialog::RejectButton },
                   { openButtonId, tr("Open in browser"), Dialog::AcceptButton } },
@@ -447,36 +497,89 @@ void GoogleDocsManager::Implementation::pull(const QUuid& _documentUuid)
     }
 
     isBusy = true;
-    driveClient->exportFile(fileId, "text/plain", [this, _documentUuid](
+    ++syncGeneration;
+    driveClient->exportFile(fileId, "text/plain", [this, _documentUuid, fileId](
                                                       const QByteArray& _text,
                                                       const GoogleDriveError& _error) {
-        isBusy = false;
         if (_error.isError()) {
+            isBusy = false;
             showError(tr("Pull from Google Docs"), _error);
             return;
         }
 
         const QString text = QString::fromUtf8(_text);
-        //
-        // Leading new line prevents the first line from being parsed as a title page key
-        //
-        BusinessLayer::ScreenplayFountainImporter importer;
-        const auto screenplay = importer.screenplayText("\n" + text);
-        if (screenplay.text.isEmpty()) {
+        if (text.trimmed().isEmpty()) {
+            isBusy = false;
             inform(tr("Pull from Google Docs"), tr("The Google Doc is empty."));
             return;
         }
 
-        const auto draftName = tr("Google Docs %1")
-                                   .arg(QDateTime::currentDateTime().toString("dd/MM HH:mm"));
-        projectManager->addDocumentDraft(_documentUuid, draftName, screenplay.text.toUtf8());
-        setSettingsValue(settingsKey(_documentUuid, kTextHashKey), textHash(text));
-        setSettingsValue(settingsKey(_documentUuid, kSyncedAtKey), QDateTime::currentDateTimeUtc());
-        inform(tr("Pull from Google Docs"),
-               tr("The text from Google Docs was added as the new draft \"%1\". The current text "
-                  "was not changed.")
-                   .arg(draftName));
+        if (settingsValue(settingsKey(_documentUuid, kFormatKey)).toString() == kDocxFormat) {
+            pullDocx(_documentUuid, fileId, text);
+            return;
+        }
+
+        //
+        // Pushed by an older version: Fountain text. Leading new line prevents the first line from
+        // being parsed as a title page key
+        //
+        isBusy = false;
+        BusinessLayer::ScreenplayFountainImporter importer;
+        addPulledDraft(_documentUuid, importer.screenplayText("\n" + text).text, text);
     });
+}
+
+void GoogleDocsManager::Implementation::pullDocx(const QUuid& _documentUuid, const QString& _fileId,
+                                                 const QString& _text)
+{
+    driveClient->exportFile(
+        _fileId, kDocxMimeType,
+        [this, _documentUuid, _text](const QByteArray& _docx, const GoogleDriveError& _error) {
+            isBusy = false;
+            if (_error.isError()) {
+                showError(tr("Pull from Google Docs"), _error);
+                return;
+            }
+
+            QTemporaryDir directory;
+            BusinessLayer::ImportOptions options;
+            options.filePath = directory.filePath(QStringLiteral("screenplay.docx"));
+            QFile file(options.filePath);
+            if (!directory.isValid() || !file.open(QIODevice::WriteOnly)
+                || file.write(_docx) != _docx.size()) {
+                inform(tr("Pull from Google Docs"), tr("Can't read the Google Doc."));
+                return;
+            }
+            file.close();
+
+            BusinessLayer::ScreenplayGoogleDocImporter importer;
+            importer.addKnownParagraphs(screenplayModel(_documentUuid));
+            const auto screenplays = importer.importScreenplays(options);
+            addPulledDraft(_documentUuid,
+                           screenplays.isEmpty() ? QString() : screenplays.constFirst().text,
+                           _text);
+        });
+}
+
+void GoogleDocsManager::Implementation::addPulledDraft(const QUuid& _documentUuid,
+                                                       const QString& _screenplayXml,
+                                                       const QString& _text)
+{
+    if (_screenplayXml.isEmpty()) {
+        inform(tr("Pull from Google Docs"), tr("Can't read the Google Doc."));
+        return;
+    }
+
+    ++syncGeneration;
+    const auto draftName
+        = tr("Google Docs %1").arg(QDateTime::currentDateTime().toString("dd/MM HH:mm"));
+    projectManager->addDocumentDraft(_documentUuid, draftName, _screenplayXml.toUtf8());
+    setSettingsValue(settingsKey(_documentUuid, kTextHashKey), textHash(_text));
+    setSettingsValue(settingsKey(_documentUuid, kSyncedAtKey), QDateTime::currentDateTimeUtc());
+    inform(tr("Pull from Google Docs"),
+           tr("The text from Google Docs was added as the new draft \"%1\". The current text "
+              "was not changed.")
+               .arg(draftName));
 }
 
 void GoogleDocsManager::Implementation::openInBrowser(const QUuid& _documentUuid)
@@ -488,6 +591,101 @@ void GoogleDocsManager::Implementation::openInBrowser(const QUuid& _documentUuid
         return;
     }
     QDesktopServices::openUrl(documentUrl(fileId));
+}
+
+void GoogleDocsManager::Implementation::checkForChanges()
+{
+    if (isBusy || isCheckingForChanges || isPullOffered || !authManager->isSignedIn()
+        || QGuiApplication::applicationState() != Qt::ApplicationActive
+        || QApplication::activeModalWidget() != nullptr) {
+        return;
+    }
+
+    QVector<QUuid> documents;
+    for (const auto& documentUuid : projectManager->screenplayDocuments()) {
+        if (!settingsValue(settingsKey(documentUuid, kFileIdKey)).toString().isEmpty()) {
+            documents.append(documentUuid);
+        }
+    }
+    if (documents.isEmpty()) {
+        return;
+    }
+
+    isCheckingForChanges = true;
+    checkNextDocument(documents, syncGeneration);
+}
+
+void GoogleDocsManager::Implementation::checkNextDocument(QVector<QUuid> _documents,
+                                                          int _generation)
+{
+    if (_documents.isEmpty() || _generation != syncGeneration) {
+        isCheckingForChanges = false;
+        return;
+    }
+
+    //
+    // Errors are not shown: nobody asked for this check, and the app may be offline
+    //
+    const auto documentUuid = _documents.takeFirst();
+    const auto fileId = settingsValue(settingsKey(documentUuid, kFileIdKey)).toString();
+    driveClient->fileMetadata(fileId, [this, _documents, _generation, documentUuid, fileId](
+                                          const GoogleDriveFile& _file,
+                                          const GoogleDriveError& _error) {
+        const auto modifiedTime = _file.modifiedTime.toUTC().toString(Qt::ISODateWithMs);
+        if (_error.isError() || _file.trashed
+            || modifiedTime
+                == settingsValue(settingsKey(documentUuid, kSeenModifiedTimeKey)).toString()) {
+            checkNextDocument(_documents, _generation);
+            return;
+        }
+
+        driveClient->exportFile(
+            fileId, "text/plain",
+            [this, _documents, _generation, documentUuid, modifiedTime,
+             _file](const QByteArray& _text, const GoogleDriveError& _error) {
+                if (_error.isError() || _generation != syncGeneration) {
+                    checkNextDocument(_documents, _generation);
+                    return;
+                }
+
+                setSettingsValue(settingsKey(documentUuid, kSeenModifiedTimeKey), modifiedTime);
+                const auto hash = textHash(QString::fromUtf8(_text));
+                if (hash == settingsValue(settingsKey(documentUuid, kTextHashKey)).toString()
+                    || hash
+                        == settingsValue(settingsKey(documentUuid, kOfferedHashKey)).toString()) {
+                    checkNextDocument(_documents, _generation);
+                    return;
+                }
+
+                setSettingsValue(settingsKey(documentUuid, kOfferedHashKey), hash);
+                isCheckingForChanges = false;
+                offerPull(documentUuid, _file.name);
+            });
+    });
+}
+
+void GoogleDocsManager::Implementation::offerPull(const QUuid& _documentUuid,
+                                                  const QString& _fileName)
+{
+    static constexpr int laterButtonId = 0;
+    static constexpr int pullButtonId = 1;
+    isPullOffered = true;
+    ask(tr("The Google Doc was changed"),
+        tr("Somebody changed the Google Doc \"%1\". Pull the changes into a new draft? The current "
+           "text will not be changed.")
+            .arg(_fileName),
+        { { laterButtonId, tr("Later"), Dialog::RejectButton },
+          { pullButtonId, tr("Pull"), Dialog::AcceptButton } },
+        [this, _documentUuid](int _buttonId) {
+            isPullOffered = false;
+            //
+            // The project could have been closed while the question was on the screen
+            //
+            if (_buttonId == pullButtonId && !isBusy
+                && projectManager->screenplayDocuments().contains(_documentUuid)) {
+                withSignIn([this, _documentUuid] { pull(_documentUuid); });
+            }
+        });
 }
 
 
@@ -516,6 +714,10 @@ GoogleDocsManager::GoogleDocsManager(QObject* _parent, QWidget* _parentWidget,
     });
 
     d->authManager->restoreSession();
+
+    d->changesTimer.setInterval(kChangesCheckIntervalMs);
+    connect(&d->changesTimer, &QTimer::timeout, this, [this] { d->checkForChanges(); });
+    d->changesTimer.start();
 }
 
 GoogleDocsManager::~GoogleDocsManager() = default;

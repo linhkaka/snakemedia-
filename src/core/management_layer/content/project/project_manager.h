@@ -242,6 +242,7 @@ public:
      * @brief Jenny Script fork: access to documents for the Google Docs bridge
      */
     BusinessLayer::AbstractModel* modelForDocument(const QUuid& _documentUuid) const;
+    QVector<QUuid> screenplayDocuments() const;
     void addDocumentDraft(const QUuid& _documentUuid, const QString& _name,
                           const QByteArray& _content);
 

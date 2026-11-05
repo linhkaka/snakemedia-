@@ -14,19 +14,30 @@ ProjectToolBar::ProjectToolBar(QWidget* _parent)
     menuAction->setText(u8"\U000f035c");
     addAction(menuAction);
     connect(menuAction, &QAction::triggered, this, &ProjectToolBar::menuPressed);
+
+    m_googleDocsAction = new QAction(this);
+    m_googleDocsAction->setText(u8"\U000F02B6");
+    m_googleDocsAction->setToolTip(QStringLiteral("Google Docs"));
+    m_googleDocsAction->setVisible(false);
+    addAction(m_googleDocsAction);
+    connect(m_googleDocsAction, &QAction::triggered, this, &ProjectToolBar::googleDocsPressed);
 }
 
 void ProjectToolBar::clearViews()
 {
     //
-    // Оставляем только кнопку меню
+    // Оставляем только кнопку меню (и кнопку Google Docs, Jenny Script fork)
     //
     auto actions = this->actions();
     while (actions.size() > 1) {
         auto action = actions.takeLast();
+        if (action == m_googleDocsAction) {
+            continue;
+        }
         removeAction(action);
         action->deleteLater();
     }
+    m_googleDocsAction->setVisible(false);
 
     //
     // Очистим опции модулей
@@ -46,6 +57,11 @@ void ProjectToolBar::addView(const QString& _mimeType, const QString& _icon,
     viewAction->setChecked(_isActive);
     viewAction->setData(_mimeType);
     addAction(viewAction);
+    //
+    // ... кнопка Google Docs всегда после представлений
+    //
+    removeAction(m_googleDocsAction);
+    addAction(m_googleDocsAction);
     connect(viewAction, &QAction::toggled, this,
             [this, _mimeType] { emit viewPressed(_mimeType); });
 
@@ -137,6 +153,12 @@ void ProjectToolBar::setCurrentViewMimeType(const QString& _mimeType)
             action->setChecked(false);
         }
     }
+}
+
+void ProjectToolBar::setGoogleDocsVisible(bool _visible)
+{
+    m_googleDocsAction->setVisible(_visible);
+    update();
 }
 
 void ProjectToolBar::updateTranslations()

@@ -270,6 +270,7 @@ SOURCES += \
     business_layer/import/novel/novel_markdown_importer.cpp \
     business_layer/import/screenplay/screenplay_celtx_importer.cpp \
     business_layer/import/screenplay/screenplay_docx_importer.cpp \
+    business_layer/import/screenplay/screenplay_google_doc_importer.cpp \
     business_layer/import/screenplay/screenplay_fdx_importer.cpp \
     business_layer/import/screenplay/screenplay_fountain_importer.cpp \
     business_layer/import/screenplay/screenplay_kit_scenarist_importer.cpp \
@@ -656,6 +657,7 @@ HEADERS += \
     business_layer/import/screenplay/abstract_screenplay_importer.h \
     business_layer/import/screenplay/screenplay_celtx_importer.h \
     business_layer/import/screenplay/screenplay_docx_importer.h \
+    business_layer/import/screenplay/screenplay_google_doc_importer.h \
     business_layer/import/screenplay/screenplay_fdx_importer.h \
     business_layer/import/screenplay/screenplay_fountain_importer.h \
     business_layer/import/screenplay/screenplay_kit_scenarist_importer.h \

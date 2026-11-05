@@ -13,10 +13,12 @@ class ProjectManager;
 /**
  * @brief Google Docs bridge for screenplays
  *
- * Push: the screenplay is exported as Fountain text and uploaded as a Google Doc into the
- * "Jenny Script/<project>" folder, next pushes update the same Doc. Before an update the Doc text
- * is compared with the text of the last sync to not overwrite edits made in Google Docs.
- * Pull: the Doc is exported as plain text, imported as Fountain and added as a new draft.
+ * Push: the screenplay is exported as DOCX and uploaded as a Google Doc with the page layout into
+ * the "Jenny Script/<project>" folder, next pushes update the same Doc. Before an update the Doc
+ * text is compared with the text of the last sync to not overwrite edits made in Google Docs.
+ * Pull: the Doc is exported as DOCX, read by ScreenplayGoogleDocImporter and added as a new draft.
+ * A Doc pushed by an older version holds Fountain text and is still pulled as Fountain.
+ * While a project is open the app looks for changes in its Docs and offers to pull them.
  *
  * Mapping between a document and its Google Doc is kept in the application settings, the project
  * file is not changed.

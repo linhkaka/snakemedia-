@@ -31,7 +31,17 @@ public:
     QString currentViewMimeType() const;
     void setCurrentViewMimeType(const QString& _mimeType);
 
+    /**
+     * @brief Jenny Script fork: button with the Google Docs commands, follows the views
+     */
+    void setGoogleDocsVisible(bool _visible);
+
 signals:
+    /**
+     * @brief Jenny Script fork: the user wants to see the Google Docs commands
+     */
+    void googleDocsPressed();
+
     /**
      * @brief Пользователь хочет открыть меню
      */
@@ -52,6 +62,9 @@ protected:
      * @brief Обновляем виджет при изменении дизайн системы
      */
     void designSystemChangeEvent(DesignSystemChangeEvent* _event) override;
+
+private:
+    QAction* m_googleDocsAction = nullptr;
 };
 
 } // namespace Ui

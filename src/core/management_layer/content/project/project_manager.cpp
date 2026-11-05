@@ -237,6 +237,15 @@ public:
      */
     void updateNavigatorContextMenu(const QModelIndex& _index);
 
+#ifdef GOOGLE_INTEGRATION
+    /**
+     * @brief Jenny Script fork: screenplay text of the given part of a screenplay
+     */
+    QUuid googleDocsDocumentFor(BusinessLayer::StructureModelItem* _item) const;
+    QVector<QAction*> googleDocsActions(const QUuid& _documentUuid, bool _canEdit);
+    void updateGoogleDocsButton(BusinessLayer::StructureModelItem* _item);
+#endif
+
     /**
      * @brief Установить заданный элемент текущим
      */
@@ -620,6 +629,60 @@ void ProjectManager::Implementation::switchViews(bool _withActivation)
     navigator->setCurrentIndex(activeIndex);
 }
 
+#ifdef GOOGLE_INTEGRATION
+QUuid ProjectManager::Implementation::googleDocsDocumentFor(
+    BusinessLayer::StructureModelItem* _item) const
+{
+    if (_item == nullptr || isInsideRecycleBin(_item)) {
+        return {};
+    }
+    if (_item->type() == Domain::DocumentObjectType::ScreenplayText) {
+        return _item->uuid();
+    }
+
+    const auto screenplay = _item->type() == Domain::DocumentObjectType::Screenplay
+        ? _item
+        : _item->parent();
+    if (screenplay == nullptr || screenplay->type() != Domain::DocumentObjectType::Screenplay) {
+        return {};
+    }
+    for (int row = 0; row < screenplay->childCount(); ++row) {
+        if (screenplay->childAt(row)->type() == Domain::DocumentObjectType::ScreenplayText) {
+            return screenplay->childAt(row)->uuid();
+        }
+    }
+    return {};
+}
+
+QVector<QAction*> ProjectManager::Implementation::googleDocsActions(const QUuid& _documentUuid,
+                                                                    bool _canEdit)
+{
+    const QVector<std::pair<QString, QString>> actions = {
+        { tr("Push to Google Docs"), u8"\U000F0167" },
+        { tr("Pull from Google Docs"), u8"\U000F0162" },
+        { tr("Open in Google Docs"), u8"\U000F03CC" },
+    };
+    QVector<QAction*> result;
+    for (int action = 0; action < actions.size(); ++action) {
+        auto googleDocsAction = new QAction(actions.at(action).first);
+        googleDocsAction->setSeparator(action == 0);
+        googleDocsAction->setIconText(actions.at(action).second);
+        googleDocsAction->setEnabled(action != 1 || _canEdit);
+        connect(googleDocsAction, &QAction::triggered, q, [this, action, _documentUuid] {
+            emit q->googleDocsActionRequested(action, _documentUuid);
+        });
+        result.append(googleDocsAction);
+    }
+    return result;
+}
+
+void ProjectManager::Implementation::updateGoogleDocsButton(
+    BusinessLayer::StructureModelItem* _item)
+{
+    toolBar->setGoogleDocsVisible(!googleDocsDocumentFor(_item).isNull());
+}
+#endif
+
 void ProjectManager::Implementation::updateNavigatorContextMenu(const QModelIndex& _index)
 {
     QVector<QAction*> menuActions;
@@ -812,35 +875,10 @@ void ProjectManager::Implementation::updateNavigatorContextMenu(const QModelInde
             //
             // Jenny Script fork: Google Docs bridge for screenplays
             //
-            QUuid screenplayTextUuid;
-            if (currentItem->type() == Domain::DocumentObjectType::ScreenplayText) {
-                screenplayTextUuid = currentItem->uuid();
-            } else if (currentItem->type() == Domain::DocumentObjectType::Screenplay) {
-                for (int row = 0; row < currentItem->childCount(); ++row) {
-                    if (currentItem->childAt(row)->type()
-                        == Domain::DocumentObjectType::ScreenplayText) {
-                        screenplayTextUuid = currentItem->childAt(row)->uuid();
-                        break;
-                    }
-                }
-            }
-            if (!screenplayTextUuid.isNull()) {
-                const QVector<std::pair<QString, QString>> googleDocsActions = {
-                    { tr("Push to Google Docs"), u8"\U000F0167" },
-                    { tr("Pull from Google Docs"), u8"\U000F0162" },
-                    { tr("Open in Google Docs"), u8"\U000F03CC" },
-                };
-                for (int action = 0; action < googleDocsActions.size(); ++action) {
-                    auto googleDocsAction = new QAction(googleDocsActions.at(action).first);
-                    googleDocsAction->setSeparator(action == 0);
-                    googleDocsAction->setIconText(googleDocsActions.at(action).second);
-                    googleDocsAction->setEnabled(action != 1 || hasEditingPermissionsForDocument);
-                    connect(googleDocsAction, &QAction::triggered, q,
-                            [this, action, screenplayTextUuid] {
-                                emit q->googleDocsActionRequested(action, screenplayTextUuid);
-                            });
-                    menuActions.append(googleDocsAction);
-                }
+            if (const auto screenplayTextUuid = googleDocsDocumentFor(currentItem);
+                !screenplayTextUuid.isNull()) {
+                menuActions.append(
+                    googleDocsActions(screenplayTextUuid, hasEditingPermissionsForDocument));
             }
 #endif
 
@@ -2314,6 +2352,27 @@ ProjectManager::ProjectManager(QObject* _parent, QWidget* _parentWidget,
     , d(new Implementation(this, _parentWidget, _pluginsBuilder))
 {
     connect(d->toolBar, &Ui::ProjectToolBar::menuPressed, this, &ProjectManager::menuRequested);
+#ifdef GOOGLE_INTEGRATION
+    connect(d->toolBar, &Ui::ProjectToolBar::googleDocsPressed, this, [this] {
+        const auto documentUuid = d->googleDocsDocumentFor(
+            d->projectStructureModel->itemForIndex(d->view.activeIndex));
+        if (documentUuid.isNull()) {
+            return;
+        }
+
+        const auto canEdit = !d->isProjectRemote || d->isProjectOwner
+            || d->editingMode == DocumentEditingMode::Edit;
+        const auto menuActions = d->googleDocsActions(documentUuid, canEdit);
+        menuActions.constFirst()->setSeparator(false);
+
+        auto menu = new ContextMenu(d->view.active);
+        menu->setActions(menuActions);
+        menu->setBackgroundColor(Ui::DesignSystem::color().background());
+        menu->setTextColor(Ui::DesignSystem::color().onBackground());
+        connect(menu, &ContextMenu::disappeared, menu, &ContextMenu::deleteLater);
+        menu->showContextMenu(QCursor::pos());
+    });
+#endif
     connect(d->toolBar, &Ui::ProjectToolBar::viewPressed, this, [this](const QString& _mimeType) {
         showView(d->navigator->currentIndex(), _mimeType);
     });
@@ -5382,6 +5441,25 @@ BusinessLayer::AbstractModel* ProjectManager::modelForDocument(const QUuid& _doc
     return d->modelsFacade.modelFor(_documentUuid);
 }
 
+QVector<QUuid> ProjectManager::screenplayDocuments() const
+{
+    QVector<QUuid> documents;
+    const std::function<void(BusinessLayer::StructureModelItem*)> collect
+        = [this, &documents, &collect](BusinessLayer::StructureModelItem* _item) {
+              if (_item->type() == Domain::DocumentObjectType::ScreenplayText
+                  && !d->isInsideRecycleBin(_item)) {
+                  documents.append(_item->uuid());
+              }
+              for (int row = 0; row < _item->childCount(); ++row) {
+                  collect(_item->childAt(row));
+              }
+          };
+    for (int row = 0; row < d->projectStructureModel->rowCount(); ++row) {
+        collect(d->projectStructureModel->itemForIndex(d->projectStructureModel->index(row, 0)));
+    }
+    return documents;
+}
+
 void ProjectManager::addDocumentDraft(const QUuid& _documentUuid, const QString& _name,
                                       const QByteArray& _content)
 {
@@ -5535,6 +5613,9 @@ void ProjectManager::showView(const QModelIndex& _index)
         const bool isActive = view.mimeType == views.first().mimeType;
         d->toolBar->addView(view.mimeType, view.icon, tooltip, isActive);
     }
+#ifdef GOOGLE_INTEGRATION
+    d->updateGoogleDocsButton(item);
+#endif
 
     //
     // Откроем документ на редактирование в первом из представлений
@@ -5930,6 +6011,9 @@ void ProjectManager::activateView(const QModelIndex& _itemIndex, const QString& 
         const bool isActive = view.mimeType == views.first().mimeType;
         d->toolBar->addView(view.mimeType, view.icon, tooltip, isActive);
     }
+#ifdef GOOGLE_INTEGRATION
+    d->updateGoogleDocsButton(item);
+#endif
 
     //
     // Определим редактор для отображения

@@ -1,6 +1,12 @@
 #include <business_layer/import/fountain_text_normalizer.h>
+#include <business_layer/import/import_options.h>
 #include <business_layer/import/screenplay/screenplay_fountain_importer.h>
+#include <business_layer/import/screenplay/screenplay_google_doc_importer.h>
+#include <business_layer/templates/text_template.h>
 
+#include <QTextBlock>
+#include <QTextCursor>
+#include <QTextDocument>
 #include <QXmlStreamReader>
 #include <QtTest>
 
@@ -57,11 +63,125 @@ QStringList textsOf(const QVector<Paragraph>& _paragraphs, const QString& _type)
 } // namespace
 
 
+/**
+ * @brief Paragraph of a Google Doc: text and indent in pixels, a negative indent is right aligned
+ */
+using DocParagraph = QPair<QString, int>;
+
+QVector<Paragraph> importGoogleDoc(const BusinessLayer::ScreenplayGoogleDocImporter& _importer,
+                                   const QVector<DocParagraph>& _paragraphs)
+{
+    QTextDocument document;
+    QTextCursor cursor(&document);
+    for (int index = 0; index < _paragraphs.size(); ++index) {
+        if (index > 0) {
+            cursor.insertBlock();
+        }
+        QTextBlockFormat format;
+        if (_paragraphs.at(index).second < 0) {
+            format.setAlignment(Qt::AlignRight);
+        } else {
+            format.setLeftMargin(_paragraphs.at(index).second);
+        }
+        cursor.setBlockFormat(format);
+        cursor.insertText(_paragraphs.at(index).first);
+    }
+    return paragraphs(_importer.parseDocument(BusinessLayer::ImportOptions(), document));
+}
+
+constexpr int kDialogue = 96;
+constexpr int kParenthetical = 154;
+constexpr int kCharacter = 211;
+
 class FountainImportTest : public QObject
 {
     Q_OBJECT
 
 private slots:
+    void googleDocNewParagraphsAreDetected()
+    {
+        const BusinessLayer::ScreenplayGoogleDocImporter importer;
+        const QVector<Paragraph> expected = {
+            { "scene_heading", QString::fromUtf8("NGOẠI. RỪNG - ĐÊM") },
+            { "action", QString::fromUtf8("Trời mưa.") },
+            { "action", QString::fromUtf8("TIẾNG SÉT VANG LÊN") },
+            { "character", QString::fromUtf8("CÁ TRÊ (V.O.)") },
+            { "parenthetical", QString::fromUtf8("gắt") },
+            { "dialogue", QString::fromUtf8("Xéo ngay!") },
+            { "transition", QString::fromUtf8("CẮT SANG:") },
+            { "scene_heading", QString::fromUtf8("CẢNH 2: BỜ AO") },
+            { "transition", QString::fromUtf8("CHUYỂN CẢNH:") },
+            { "scene_heading", QString::fromUtf8("BỜ AO - TRƯA") },
+        };
+        const auto result = importGoogleDoc(
+            importer,
+            { { QString::fromUtf8("NGOẠI. RỪNG - ĐÊM"), 0 },
+              { QString(), 0 },
+              { QString::fromUtf8("Trời mưa."), 0 },
+              { QString(), 0 },
+              { QString::fromUtf8("TIẾNG SÉT VANG LÊN"), 0 },
+              { QString(), 0 },
+              { QString::fromUtf8("CÁ TRÊ (V.O.)"), kCharacter },
+              { QString::fromUtf8("(gắt)"), kParenthetical },
+              { QString::fromUtf8("Xéo ngay!"), kDialogue },
+              { QString(), 0 },
+              { QString::fromUtf8("CẮT SANG:"), -1 },
+              { QString(), 0 },
+              { QString::fromUtf8("CẢNH 2: BỜ AO"), 0 },
+              { QString(), 0 },
+              { QString::fromUtf8("CHUYỂN CẢNH:"), 0 },
+              { QString(), 0 },
+              { QString::fromUtf8("BỜ AO - TRƯA"), 0 } });
+        QCOMPARE(result, expected);
+    }
+
+    void googleDocKnownParagraphsKeepTheirType()
+    {
+        using BusinessLayer::TextParagraphType;
+        BusinessLayer::ScreenplayGoogleDocImporter importer;
+        importer.addKnownParagraph(QString::fromUtf8("Bờ ao yên bình"),
+                                   TextParagraphType::SceneHeading);
+        importer.addKnownParagraph(QString::fromUtf8("NỖI BUỒN"), TextParagraphType::Character);
+        importer.addKnownParagraph(QString::fromUtf8("nói nhỏ"), TextParagraphType::Parenthetical);
+        importer.addKnownParagraph(QString::fromUtf8("MẸ ƠI!"), TextParagraphType::Dialogue);
+
+        //
+        // Somebody cleared the formatting of the Doc: all indents are gone
+        //
+        const QVector<Paragraph> expected = {
+            { "scene_heading", QString::fromUtf8("BỜ AO YÊN BÌNH") },
+            { "character", QString::fromUtf8("NỖI BUỒN") },
+            { "parenthetical", QString::fromUtf8("nói nhỏ") },
+            { "dialogue", QString::fromUtf8("MẸ ƠI!") },
+        };
+        QCOMPARE(importGoogleDoc(importer,
+                                 { { QString::fromUtf8("BỜ AO YÊN BÌNH"), 0 },
+                                   { QString::fromUtf8("NỖI BUỒN"), 0 },
+                                   { QString::fromUtf8("(nói nhỏ)"), 0 },
+                                   { QString::fromUtf8("MẸ ƠI!"), 0 } }),
+                 expected);
+    }
+
+    void googleDocTextWithTwoTypesIsDetected()
+    {
+        using BusinessLayer::TextParagraphType;
+        BusinessLayer::ScreenplayGoogleDocImporter importer;
+        importer.addKnownParagraph(QString::fromUtf8("CÓC MẸ"), TextParagraphType::Action);
+        importer.addKnownParagraph(QString::fromUtf8("CÓC MẸ"), TextParagraphType::Character);
+
+        const QVector<Paragraph> expected = {
+            { "action", QString::fromUtf8("CÓC MẸ") },
+            { "character", QString::fromUtf8("CÓC MẸ") },
+            { "dialogue", QString::fromUtf8("Có.") },
+        };
+        QCOMPARE(importGoogleDoc(importer,
+                                 { { QString::fromUtf8("CÓC MẸ"), 0 },
+                                   { QString(), 0 },
+                                   { QString::fromUtf8("CÓC MẸ"), kCharacter },
+                                   { QString::fromUtf8("Có."), kDialogue } }),
+                 expected);
+    }
+
     void formatPlainTextDetectsEachLine()
     {
         const auto text = QString::fromUtf8("EXT. ĐƯỜNG ĐÈO – ĐÊM\n"
