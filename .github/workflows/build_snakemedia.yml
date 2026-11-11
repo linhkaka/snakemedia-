@@ -115,9 +115,13 @@ jobs:
           try {
             if ($process.WaitForExit(12000)) { throw "Packaged app exited during startup (code $($process.ExitCode))." }
           } finally {
-            if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
+            if (-not $process.HasExited) {
+              Stop-Process -Id $process.Id -Force
+              if (-not $process.WaitForExit(10000)) { throw 'Startup test process did not stop.' }
+            }
+            $process.Dispose()
           }
-          Remove-Item -LiteralPath (Join-Path $dist 'platforms/qoffscreen.dll')
+          Remove-Item -LiteralPath (Join-Path $dist 'platforms/qoffscreen.dll') -Force
 
       - name: Archive corresponding source and refresh package hashes
         shell: pwsh
