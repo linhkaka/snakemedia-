@@ -10,7 +10,11 @@ Bản desktop Windows x64 dựa trên Story Architect và Jenny Script, thêm th
 
 ## Tình trạng
 
-Đang chạy lượt build Windows đầu tiên; chưa xác nhận có EXE chạy được. Xem kết quả thực tế trong Actions.
+**Đã build Windows x64 thành công ngày 11/11/2026.** [CI 42998147303](https://github.com/linhkaka/snakemedia-/actions/runs/42998147303) đạt test native, biên dịch tiếng Việt, build, đóng gói và thử khởi động headless 12 giây. Cần nghiệm thu thao tác giao diện, nhập/xuất và Google theo checklist trước khi dùng chính thức.
+
+[Tải bản Windows portable](https://github.com/linhkaka/snakemedia-/actions/runs/42998147303/artifacts/13845619261) · [Mã nguồn tương ứng](https://github.com/linhkaka/snakemedia-/actions/runs/42998147303/artifacts/13845494237)
+
+Commit được biên dịch: `4b975784df43b37f570b5554607c52ee91311d0c`.
 
 Nhánh `main` chứa trang hướng dẫn và workflow khởi chạy thủ công. Mã sản phẩm nằm ở `phase-snakemedia-desktop`; workflow thủ công lấy mã từ nhánh này.
 
