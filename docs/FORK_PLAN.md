@@ -142,6 +142,9 @@ Không đổi `.starc` hoặc scope Google. Người dùng đã chọn repo `lin
 19 kiểm tra nguồn đạt. CI đầu `42994646049`: compile Windows, đóng gói, 7 Qt Test và khởi động 12 giây đạt;
 lỗi dọn DLL offscreen sau khi dừng tiến trình làm workflow chưa upload bản portable. Đã thêm chờ thoát
 và xóa file read-only bằng `-Force`; cần chạy lại CI để xác nhận toàn bộ và lấy artifact.
+CI lần hai `42998147303` đã thành công toàn bộ tại commit `4b975784df43b37f570b5554607c52ee91311d0c`:
+test native, lrelease, compile, đóng gói, khởi động headless 12 giây và ba artifact đều đạt.
+Đây là bản portable đầu tiên để nghiệm thu; chưa xác nhận test tay editor/xuất file/OAuth trên máy người dùng.
 Xem `README_SNAKEMEDIA.md` cho phạm vi, kiểm chứng và các file đã sửa.
 
 **Quyết định (chốt 03/11/2026):**

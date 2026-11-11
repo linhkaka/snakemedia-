@@ -17,13 +17,17 @@ GPL-3.0; giữ nguyên `LICENSE`, ghi công trong `NOTICE.txt`.
 - Xuất gói bàn giao và gửi bản sao vào Bàn viết web local qua thao tác người dùng.
 - Không khởi chạy updater Jenny Script; không gửi crash/telemetry lên nhóm gốc trong cấu hình build này.
 
-Đây là mã nguồn đang chuẩn bị build, **chưa phải xác nhận đã có file EXE chạy được**.
-Máy hiện tại không có Qt/MSVC. Build trên GitHub Actions tại [linhkaka/snakemedia-](https://github.com/linhkaka/snakemedia-).
+**Đã build Windows x64 thành công ngày 11/11/2026**, từ commit `4b975784df43b37f570b5554607c52ee91311d0c`.
+[CI 42998147303](https://github.com/linhkaka/snakemedia-/actions/runs/42998147303) đạt kiểm tra nguồn,
+Qt Test, biên dịch tiếng Việt, build app, đóng gói và thử khởi động headless 12 giây với PATH không có Qt.
+Đây là bản portable đầu tiên; các thao tác giao diện/editor/Google vẫn cần nghiệm thu theo checklist bên dưới.
+Máy hiện tại không có Qt/MSVC; bản build được tạo trên GitHub Actions tại [linhkaka/snakemedia-](https://github.com/linhkaka/snakemedia-).
 
 ## Build bằng GitHub Actions
 
 Workflow: `.github/workflows/build_snakemedia.yml`.
 Workflow không publish release, không cấp quyền ghi repo. Nó tạo artifact để tải về kiểm tra trước.
+Nhánh `main` có bản workflow thủ công lấy nguồn từ `phase-snakemedia-desktop`; nhánh sản phẩm có thêm trigger push/PR.
 
 1. Dùng nhánh `phase-snakemedia-desktop` trong repo `linhkaka/snakemedia-` đã được người dùng chọn.
 2. Push nhánh `phase-snakemedia-desktop` sẽ chạy workflow; hoặc chạy thủ công **Build SNAKEMEDIA Studio**.
@@ -56,7 +60,7 @@ Cần chạy SNAKEMEDIA_VOICE riêng. Ghi chú nhân vật/bối cảnh được
   giữ GPL/credits và các bước kiểm thử/đóng gói trong CI. **Không thay thế C++ build.**
 - `tests/snakemedia`: Qt Test cho tiếng Việt round-trip, dữ liệu sai, bảo toàn file cũ khi lưu lỗi,
   giới hạn file và JSON bàn giao.
-- CI cần xanh và gói EXE cần qua [checklist test tay](docs/HUONG_DAN_SNAKEMEDIA.txt) trước khi xác nhận phát hành.
+- CI đã xanh. Gói EXE cần qua [checklist test tay](docs/HUONG_DAN_SNAKEMEDIA.txt) trước khi xác nhận phát hành chính thức.
 - Chưa cài binary Jenny Script lên máy, chưa build Qt local, chưa thử OAuth thật.
 
 ## Các điểm móc khác upstream
