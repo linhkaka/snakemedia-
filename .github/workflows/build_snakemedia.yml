@@ -1,0 +1,151 @@
+name: Build SNAKEMEDIA Studio
+
+on:
+  push:
+    branches: [main, master, 'phase-snakemedia-*']
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: snakemedia-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    name: Windows x64 portable + native tests
+    runs-on: windows-2022
+    timeout-minutes: 120
+    env:
+      QT_VERSION: 6.11.2
+      GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: false
+
+      - name: Initialize public dependencies only
+        shell: bash
+        run: git submodule update --init --recursive src/3rd_party/pdfhummus src/3rd_party/pdftextextraction src/3rd_party/qtkeychain
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Configure brand and inspect source invariants
+        shell: pwsh
+        run: |
+          python build/snakemedia/configure_brand.py --repository '${{ github.repository }}'
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          python build/snakemedia/check_source.py
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          arch: win64_msvc2022_64
+          target: desktop
+          modules: qt5compat qtimageformats qtmultimedia qtspeech qtwebsockets qtnetworkauth
+          setup-python: false
+          aqtsource: 'aqtinstall @ git+https://github.com/miurahr/aqtinstall@16db45a70b5905ad596941b223469bc86a56901e'
+          cache: true
+
+      - name: Install build dependencies
+        shell: pwsh
+        run: |
+          choco install openssl --version=3.1.1 --force --yes --no-progress
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          choco install jom --yes --no-progress
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          New-Item -ItemType Junction -Path 'C:\OpenSSL' -Target 'C:\Program Files\OpenSSL' -Force | Out-Null
+          'OPENSSL_PREFIX=C:\OpenSSL' | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Configure MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Build and run native production data tests
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path work/production-tests -Force | Out-Null
+          Set-Location work/production-tests
+          qmake ../../tests/snakemedia/snakemedia.pro CONFIG+=release
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          jom -j2
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          & ./release/tst_snakemedia.exe -o results.txt,txt
+          if ($LASTEXITCODE) { Get-Content results.txt; exit $LASTEXITCODE }
+          Get-Content results.txt
+
+      - name: Compile Vietnamese translation
+        shell: pwsh
+        run: |
+          lrelease src/core/translations/translation_vi.ts -qm src/core/translations/translation_vi.qm
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      - name: Build desktop application
+        shell: pwsh
+        run: |
+          Set-Location src
+          qmake starc.pro CONFIG+=release CONFIG+=no_crashpad
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          jom -j4
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      - name: Package portable application
+        shell: pwsh
+        run: ./build/snakemedia/package_windows.ps1
+
+      - name: Test packaged startup without an installed Qt
+        shell: pwsh
+        run: |
+          $dist = Join-Path $PWD 'dist/SNAKEMEDIA-Studio-windows-x64'
+          Copy-Item (Join-Path $env:QT_ROOT_DIR 'plugins/platforms/qoffscreen.dll') (Join-Path $dist 'platforms')
+          $env:QT_QPA_PLATFORM = 'offscreen'
+          $env:QT_PLUGIN_PATH = $dist
+          $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
+          $process = Start-Process (Join-Path $dist 'snakemedia-studio.exe') -WorkingDirectory $dist -WindowStyle Hidden -PassThru
+          try {
+            if ($process.WaitForExit(12000)) { throw "Packaged app exited during startup (code $($process.ExitCode))." }
+          } finally {
+            if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
+          }
+          Remove-Item -LiteralPath (Join-Path $dist 'platforms/qoffscreen.dll')
+
+      - name: Archive corresponding source and refresh package hashes
+        shell: pwsh
+        run: |
+          python build/snakemedia/package_source.py dist/SNAKEMEDIA-Studio-source.tar.gz
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          $dist = (Resolve-Path dist/SNAKEMEDIA-Studio-windows-x64).Path
+          $hashFile = Join-Path $dist 'SHA256SUMS.txt'
+          Get-ChildItem -LiteralPath $dist -Recurse -File | Where-Object FullName -ne $hashFile | ForEach-Object {
+            $relative = $_.FullName.Substring($dist.Length + 1).Replace('\','/')
+            "$( (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant())  $relative"
+          } | Set-Content -LiteralPath $hashFile -Encoding ascii
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SNAKEMEDIA-Studio-windows-x64
+          path: dist/SNAKEMEDIA-Studio-windows-x64/
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SNAKEMEDIA-Studio-source
+          path: dist/SNAKEMEDIA-Studio-source.tar.gz
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: SNAKEMEDIA-native-test-results
+          path: work/production-tests/results.txt
+          if-no-files-found: ignore

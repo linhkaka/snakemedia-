@@ -1,4 +1,5 @@
 #pragma once
+#include <include/snakemedia_brand.h>
 
 #include <QByteArray>
 #include <QString>
@@ -14,7 +15,7 @@ namespace AppUpdate {
  * @note Raise it before building a new release. QApplication::applicationVersion() stays the
  *       upstream one, because the project database code compares it.
  */
-inline constexpr char kVersion[] = "0.8.4-jenny.5";
+inline constexpr auto& kVersion = SnakeMedia::kVersion;
 
 /**
  * @brief A release that can be installed on Windows

@@ -3,7 +3,7 @@
 # Builds without private submodules or Crashpad (CONFIG+=no_crashpad). The only secrets are the
 # OAuth client of the app. Nothing is published outside of this repository's workflow artifacts.
 #
-name: Build Jenny Script
+name: Legacy Jenny Script (manual)
 
 env:
   QT_VERSION: 6.11.2
@@ -16,9 +16,6 @@ env:
   GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
 
 on:
-  push:
-    branches: [ master, 'phase-*' ]
-  pull_request:
   workflow_dispatch: {}
 
 concurrency:

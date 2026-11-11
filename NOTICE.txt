@@ -1,4 +1,15 @@
-JENNY SCRIPT
+SNAKEMEDIA STUDIO — modified by SNAKEMEDIA, 2026
+
+This desktop edition is a further modification of Jenny Script and Story Architect.
+It uses its own application identity, project/backup folders, and production brief workspace.
+It does not install Jenny Script updates. The build's SOURCE_INFO.txt identifies the exact
+source repository and commit; the companion source artifact includes the build sources.
+The original GPL-3.0 license and upstream notices below remain applicable.
+
+SNAKEMEDIA Studio là bản sửa tiếp từ Jenny Script và Story Architect, không phải bản chính thức
+của Story Apps hay Jenny Pixel Studio. Xem SOURCE_INFO.txt cho nguồn tương ứng của bản build.
+
+JENNY SCRIPT — provenance of the base fork
 
 Jenny Script is a modified version of Story Architect (STARC), made by Jenny Pixel Studio in 2026.
 The app still shows the name "Story Architect". It is not an official release of Story Apps,

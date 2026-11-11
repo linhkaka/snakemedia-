@@ -1,4 +1,5 @@
 #include "application.h"
+#include <include/snakemedia_brand.h>
 
 #include <include/custom_events.h>
 #include <interfaces/management_layer/i_application_manager.h>
@@ -61,9 +62,9 @@ Application::Application(int& _argc, char** _argv)
     : QApplication(_argc, _argv)
     , d(new Implementation)
 {
-    setApplicationName("Story Architect");
-    setOrganizationName("Story Apps");
-    setOrganizationDomain("storyapps.dev");
+    setApplicationName(SnakeMedia::kName);
+    setOrganizationName(SnakeMedia::kOrganization);
+    setOrganizationDomain(SnakeMedia::kDomain);
 
     //
     // Настроим таймеры определения простоя приложения

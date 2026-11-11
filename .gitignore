@@ -45,3 +45,10 @@ _en_source.qm
 # Jenny Script fork: Google OAuth client credentials (never commit)
 src/google_oauth.pri
 client_secret*.json
+
+# SNAKEMEDIA build products and user production manifests
+dist/
+work/
+__pycache__/
+*.pyc
+*.snake.json

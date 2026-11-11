@@ -1,0 +1,62 @@
+SNAKEMEDIA STUDIO — DESKTOP WINDOWS x64
+Phiên bản nguồn: 0.8.4-snakemedia.1
+
+MỞ APP
+1. Giải nén toàn bộ ZIP vào một thư mục có quyền ghi.
+2. Mở snakemedia-studio.exe. Giữ nguyên corelib.dll, thư mục plugins và các thư viện Qt đi kèm.
+3. Chọn Tiếng Việt ở màn hình chào nếu cần. Google là tùy chọn; không đăng nhập vẫn viết/xuất được.
+
+DỮ LIỆU RIÊNG
+- Dự án mặc định: Documents\SNAKEMEDIA\projects
+- Sao lưu mặc định: Documents\SNAKEMEDIA\backups
+- Hồ sơ sản xuất: Documents\SNAKEMEDIA\production
+- Settings và Google keychain dùng tên SNAKEMEDIA Studio; không lấy token/settings Jenny Script.
+- File .starc vẫn giữ định dạng STARC. Muốn mở dự án cũ hãy chọn Mở, không di chuyển/xóa bản gốc.
+
+BÀN SẢN XUẤT SNAKEMEDIA
+Mở menu chính → Bàn sản xuất SNAKEMEDIA.
+- Thông tin tập: tên tập, kênh, mã slot, thị trường, thể loại, trạng thái và logline.
+- Bản thảo: nhập TXT/Fountain đã xuất từ editor, hoặc dán văn bản thuần.
+- Khóa nhân vật, khóa bối cảnh, nguồn/ghi chú duyệt: lưu yêu cầu nhất quán cho đội sản xuất.
+- Bấm Lưu để giữ hồ sơ *.snake.json. Trước khi đóng app có hỏi lưu thay đổi chưa lưu.
+- Hồ sơ này là file riêng; việc lưu ở Bàn sản xuất không tự cập nhật nội dung editor .starc.
+
+XUẤT GÓI BÀN GIAO
+Bấm Xuất gói bàn giao và chọn nơi lưu. App tạo thư mục mới gồm:
+- ho_so.snake.json: mở lại trong desktop.
+- kich_ban.txt: nội dung tab Bản thảo.
+- brief_san_xuat.txt: thông tin tập, khóa nhân vật/bối cảnh và ghi chú.
+- du_an_ban_viet.json: nhập vào Bàn viết web SNAKEMEDIA.
+
+KẾT NỐI HỆ THỐNG AI
+1. Mở CHAY TOOL.bat trong thư mục SNAKEMEDIA_VOICE để server ở 127.0.0.1:8890 hoạt động.
+2. Bàn sản xuất → Đưa bản sao sang Bàn viết AI.
+3. App gửi bản sao nội dung đến server local này, tạo dự án mới, rồi mở Bàn viết trên trình duyệt.
+4. Trong Bàn viết chọn Chuyển bản thảo sang AI, đọc dữ liệu, chọn model/key rồi chạy.
+- Mỗi lần bấm tạo một bản sao mới; không phải đồng bộ hai chiều.
+- Khóa nhân vật/bối cảnh được chuyển thành ghi chú trong Bàn viết; chưa tự ép vào prompt pipeline.
+- Không cần key AI khi viết desktop. API chỉ chạy khi Sếp bắt đầu công việc trong hệ thống web.
+
+GOOGLE DOCS
+Chỉ khả dụng khi bản build có cấu hình OAuth của SNAKEMEDIA. Nếu chưa có client OAuth,
+đăng nhập Google sẽ báo chưa cấu hình; các phần viết và nhập/xuất vẫn hoạt động.
+Không dùng token/client của Jenny Script. Scope vẫn là openid, email, drive.file.
+
+CẬP NHẬT VÀ NGUỒN
+Bản này không tự cài bản cập nhật Jenny Script. Tải bản SNAKEMEDIA mới từ repo do đội quản lý.
+Xem SOURCE_INFO.txt để biết repo/commit và gói mã nguồn tương ứng.
+Xem NOTICE.txt, LICENSE.txt và thư mục licenses để biết nguồn gốc và giấy phép.
+
+NGHIỆM THU TRƯỚC KHI DÙNG CHÍNH THỨC
+[ ] App mở được sau khi giải nén trên máy không cài Qt.
+[ ] Viết tiếng Việt có dấu, lưu, đóng và mở lại dự án .starc.
+[ ] Xuất TXT/Fountain/DOCX/PDF từ editor và kiểm tra bản xuất.
+[ ] Bàn sản xuất lưu/mở lại hồ sơ không mất dấu tiếng Việt.
+[ ] Đóng Bàn sản xuất khi đang sửa có hỏi lưu.
+[ ] Gói bàn giao có đủ bốn file và nội dung đúng.
+[ ] Chuyển bản sao sang Bàn viết local thành công khi tool web đang mở.
+[ ] Nếu dùng Google: đăng nhập, đẩy Doc, sửa trên Doc, kéo về thành bản nháp mới.
+
+GIỚI HẠN
+Bản public không chứa các plugin private của STARC. Không tuyên bố đã có cards/timeline/realtime
+native của STARC. Bàn viết web vẫn có thẻ cảnh riêng. Bản desktop SNAKEMEDIA thêm hồ sơ sản xuất native.

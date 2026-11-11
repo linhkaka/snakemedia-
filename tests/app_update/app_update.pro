@@ -6,7 +6,7 @@ QT += testlib
 QT -= gui
 
 UPDATE_DIR = $$PWD/../../src/core/management_layer/content/update
-INCLUDEPATH += $$UPDATE_DIR
+INCLUDEPATH += $$UPDATE_DIR $$PWD/../../src
 
 HEADERS += $$UPDATE_DIR/update_info.h
 SOURCES += \

@@ -118,6 +118,7 @@ public:
     QSize sizeHint() const override;
 
 signals:
+    void productionPressed();
     /**
      * @brief Пользователь кликнул на аккаунте
      */

@@ -1,5 +1,8 @@
 # Jenny Script
 
+> Local SNAKEMEDIA edition: see [README_SNAKEMEDIA.md](README_SNAKEMEDIA.md).
+> Original Jenny Script history and credits below are retained as provenance.
+
 Jenny Script is a fork of [Story Architect (STARC)](https://github.com/story-apps/starc) maintained by
 Jenny Pixel Studio. It adds a Google Docs / Google Drive bridge on top of the open-source part of STARC.
 

@@ -347,6 +347,7 @@ include(management_layer/content/google/google.pri)
 
 # Jenny Script fork: update check and install from the GitHub releases
 include(management_layer/content/update/update.pri)
+include(management_layer/content/snakemedia/snakemedia.pri)
 
 # Jenny Script fork: sound packs for typing
 include(management_layer/content/typing_sounds/typing_sounds.pri)

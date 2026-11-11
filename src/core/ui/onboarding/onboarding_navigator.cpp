@@ -948,7 +948,7 @@ void OnboardingNavigator::setAccountInfo(const Domain::AccountInfo& _accountInfo
 
 void OnboardingNavigator::updateTranslations()
 {
-    d->uiTitle->setText(tr("Welcome to the Story Architect"));
+    d->uiTitle->setText(QStringLiteral("Chào mừng đến SNAKEMEDIA Studio"));
     d->uiSubtitle->setText(tr("Let's configure something before start"));
     d->uiLanguage->setLabel(tr("Language"));
     if (const auto translationProgress
@@ -988,9 +988,8 @@ void OnboardingNavigator::updateTranslations()
 
     d->modulesTitle->setText(tr("Customize your workspace"));
     d->modulesSubtitle->setText(tr("Feel at home"));
-    d->modulesDescription->setText(
-        tr("Story Architect provides tools for working with any form of writing. Choose which ones "
-           "you plan to use:"));
+    d->modulesDescription->setText(QStringLiteral(
+        "Chọn các loại tài liệu Sếp muốn viết trong SNAKEMEDIA Studio:"));
     d->modulesScreenplayTitle->setText(tr("Screenplay"));
     d->modulesComicBookTitle->setText(tr("Comic book"));
     d->modulesAudioplayTitle->setText(tr("Audioplay"));
@@ -1031,7 +1030,8 @@ void OnboardingNavigator::updateTranslations()
            "• automatically creates backup copies of local and cloud projects in the folder "
            "\"%1\"\n\n"
            "This will help to protect your creativity in any unforeseen situation.")
-            .arg(settingsValue(DataStorageLayer::kApplicationBackupsFolderKey).toString()));
+            .arg(settingsValue(DataStorageLayer::kApplicationBackupsFolderKey).toString())
+            .replace("Story Architect", "SNAKEMEDIA Studio"));
     d->backupsContinueButton->setText(tr("Thanks I'll know"));
 
     d->socialTitle->setText(tr("Follow us on social media"));

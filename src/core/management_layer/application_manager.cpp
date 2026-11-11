@@ -1,4 +1,5 @@
 #include "application_manager.h"
+#include "content/snakemedia/production_dialog.h"
 
 #include "content/account/account_manager.h"
 #include "content/export/export_manager.h"
@@ -3050,10 +3051,8 @@ void ApplicationManager::exec(const QString& _fileToOpenPath)
                     }
                 });
             });
-            if (settingsValue(DataStorageLayer::kApplicationConfiguredKey).toBool()) {
-                QTimer::singleShot(std::chrono::seconds{ 5 }, d->appUpdateManager.data(),
-                                   &AppUpdateManager::checkForUpdate);
-            }
+            // SNAKEMEDIA uses its own release artifacts. Never install a Jenny Script update
+            // over this executable. Updates are manual until a SNAKEMEDIA release feed exists.
 #endif
 
             //
@@ -3221,6 +3220,10 @@ void ApplicationManager::initConnections()
             &AccountManager::signIn);
     connect(d->menuView, &Ui::MenuView::accountPressed, this, [this] { d->showAccount(); });
     connect(d->menuView, &Ui::MenuView::projectsPressed, this, [this] { d->showProjects(); });
+    connect(d->menuView, &Ui::MenuView::productionPressed, this, [this] {
+        SnakeMedia::ProductionDialog dialog(d->applicationView);
+        dialog.exec();
+    });
     connect(d->menuView, &Ui::MenuView::createProjectPressed, this, [this] { d->createProject(); });
     connect(d->menuView, &Ui::MenuView::openProjectPressed, this, [this] { d->openProject(); });
     connect(d->menuView, &Ui::MenuView::projectPressed, this, [this] { d->showProject(); });

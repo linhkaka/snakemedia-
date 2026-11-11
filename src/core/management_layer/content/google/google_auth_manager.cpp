@@ -31,7 +31,7 @@ namespace ManagementLayer {
 
 namespace {
 
-const QString kKeychainService = QStringLiteral("Jenny Script");
+const QString kKeychainService = QStringLiteral("SNAKEMEDIA Studio");
 const QString kKeychainRefreshTokenKey = QStringLiteral("google-refresh-token");
 //
 // Keys starting with "account" survive the settings reset
@@ -204,7 +204,7 @@ GoogleAuthManager::GoogleAuthManager(QObject* _parent)
             signOut();
             d->finishSignIn(tr("Google Drive access was not granted. Sign in again and tick the "
                                "permission to see and edit the Google Drive files used with "
-                               "Jenny Script."));
+                               "SNAKEMEDIA Studio."));
             return;
         }
 
@@ -294,7 +294,7 @@ void GoogleAuthManager::signIn()
         return;
     }
     d->replyHandler->setCallbackText(
-        tr("Signed in to Google. You can close this page and return to Jenny Script."));
+        tr("Signed in to Google. You can close this page and return to SNAKEMEDIA Studio."));
 
     d->isSignInInProgress = true;
     d->flow.grant();

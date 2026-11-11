@@ -1,5 +1,6 @@
 TEMPLATE = app
 TARGET = starcapp
+win32: TARGET = snakemedia-studio
 
 CONFIG += c++1z
 CONFIG += force_debug_info

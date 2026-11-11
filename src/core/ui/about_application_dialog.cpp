@@ -1,4 +1,6 @@
 #include "about_application_dialog.h"
+#include <include/snakemedia_brand.h>
+#include <QApplication>
 
 #include "../management_layer/content/update/update_info.h"
 
@@ -77,8 +79,11 @@ AboutApplicationDialog::Implementation::Implementation(QWidget* _parent)
     //
     descriptionLabel2->hide();
     mailButton->hide();
-    forkSourceLink->setLink(QUrl("https://github.com/vienglacial/starc"));
-    forkSourceLink->setText("github.com/vienglacial/starc");
+    const auto sourceUrl = QString::fromLatin1(SnakeMedia::kSourceUrl);
+    forkSourceLink->setLink(sourceUrl.isEmpty()
+                               ? QUrl::fromLocalFile(QApplication::applicationDirPath() + "/SOURCE_INFO.txt")
+                               : QUrl(sourceUrl));
+    forkSourceLink->setText(sourceUrl.isEmpty() ? QStringLiteral("SOURCE_INFO.txt") : sourceUrl);
     originalSourceLink->setLink(QUrl("https://github.com/story-apps/starc"));
     originalSourceLink->setText("github.com/story-apps/starc");
 
@@ -107,7 +112,7 @@ AboutApplicationDialog::AboutApplicationDialog(QWidget* _parent)
     : AbstractDialog(_parent)
     , d(new Implementation(this))
 {
-    setTitle("Story Architect");
+    setTitle(QString::fromLatin1(SnakeMedia::kName));
     setRejectButton(d->closeButton);
 
     int row = 0;
@@ -174,13 +179,14 @@ void AboutApplicationDialog::updateTranslations()
     d->isRussianSpeaking = QLocale().language() == QLocale::Russian
         || QLocale().language() == QLocale::Belarusian || QLocale().language() == QLocale::Ukrainian
         || QLocale().language() == QLocale::Kazakh;
-    d->twitterButton->setVisible(!d->isRussianSpeaking);
-    d->discordButton->setVisible(!d->isRussianSpeaking);
-    d->vkButton->setVisible(d->isRussianSpeaking);
+    d->twitterButton->hide();
+    d->discordButton->hide();
+    d->vkButton->hide();
+    d->telegramButton->hide();
 
     d->versionLabel->setText(
         QString("%1 %2").arg(tr("version"), QString::fromLatin1(ManagementLayer::AppUpdate::kVersion)));
-    d->versionLabel->setLink(QUrl("https://github.com/vienglacial/starc/releases"));
+    d->versionLabel->setLink(QUrl::fromLocalFile(QApplication::applicationDirPath() + "/SOURCE_INFO.txt"));
     d->authorsLabel1->setText(
         QString("%1 ").arg(tr("Designed, coded and crafted with love at the")));
     d->authorsLink->setLink(
@@ -190,18 +196,16 @@ void AboutApplicationDialog::updateTranslations()
     d->partnerLabel1->setText(QString("%1 ").arg(tr("The Logline Generator is powered by")));
     d->partnerLink->setText("Immersion Screenwriting");
     d->partnerLabel2->setText(".");
-    d->descriptionLabel1->setText(
-        tr("Starc is being developed with strong authors’ involvement and support so we won’t "
-           "waste the app performance on the features you don’t need."));
+    d->descriptionLabel1->setText(QStringLiteral("Không gian viết và bàn giao kịch bản dành cho SNAKEMEDIA."));
     d->descriptionLabel2->setText(
         tr("Feel free to contact us at any point of your creative journey to share your thoughts "
            "about the app, suggest ideas and report issues you met."));
-    d->forkNoticeLabel->setText(
-        tr("This is Jenny Script, a version of Story Architect by Story Apps that was modified by "
-           "Jenny Pixel Studio in 2026. It is free software under the GNU GPL version 3 and comes "
-           "with no warranty. Source code of this version and of the original app:"));
+    d->forkNoticeLabel->setText(QStringLiteral(
+        "SNAKEMEDIA Studio là bản sửa đổi từ Story Architect của Story Apps và Jenny Script "
+        "của Jenny Pixel Studio. Phát hành theo GNU GPL-3.0, không kèm bảo hành. "
+        "Nguồn và thay đổi của bản này được ghi trong SOURCE_INFO.txt và NOTICE.txt."));
 
-    d->closeButton->setText("Close");
+    d->closeButton->setText(QStringLiteral("Đóng"));
 }
 
 void AboutApplicationDialog::designSystemChangeEvent(DesignSystemChangeEvent* _event)

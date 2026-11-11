@@ -1,4 +1,5 @@
 #include "menu_view.h"
+#include <include/snakemedia_brand.h>
 
 #include "about_application_dialog.h"
 #include "../management_layer/content/update/update_info.h"
@@ -58,6 +59,7 @@ public:
     QAction* fullScreen = nullptr;
     QAction* settings = nullptr;
     QAction* aboutApplicationAction = nullptr;
+    QAction* production = nullptr;
 
     QAction* writingStatistics = nullptr;
     QAction* writingSprint = nullptr;
@@ -100,6 +102,7 @@ MenuView::Implementation::Implementation(MenuView* _parent)
     , fullScreen(new QAction)
     , settings(new QAction)
     , aboutApplicationAction(new QAction)
+    , production(new QAction(_parent))
     , writingStatistics(new QAction)
     , writingSprint(new QAction)
     , chat(new QAction)
@@ -132,6 +135,11 @@ MenuView::Implementation::Implementation(MenuView* _parent)
         drawer->addAction(exportCurrentDocument);
         drawer->addAction(fullScreen);
         drawer->addAction(settings);
+        production->setText(QStringLiteral("Bàn sản xuất SNAKEMEDIA"));
+        production->setIconText(u8"\U000F0FCE");
+        production->setCheckable(false);
+        drawer->addAction(production);
+        QObject::connect(production, &QAction::triggered, _parent, &MenuView::productionPressed);
 
         drawer->setAccountActions({
             writingStatistics,
@@ -201,9 +209,9 @@ MenuView::Implementation::Implementation(MenuView* _parent)
         //
         notifications->setIconText(u8"\U000F009A");
 
-        appName->setText("Story Architect");
-        appName->setLink(QUrl("https://starc.app"));
-        appVersion->setLink(QUrl("https://starc.app/blog/"));
+        appName->setText(QString::fromLatin1(SnakeMedia::kName));
+        appName->setLink(QUrl::fromLocalFile(QApplication::applicationDirPath() + "/HUONG_DAN_SNAKEMEDIA.txt"));
+        appVersion->setLink(QUrl::fromLocalFile(QApplication::applicationDirPath() + "/SOURCE_INFO.txt"));
         aboutAppSpacer->setText(" - ");
 
         appInfoLayout->setContentsMargins({});
@@ -635,7 +643,7 @@ void MenuView::Implementation::createMenuBar()
 
     // Основной пункт меню с нeзвазванием "Story Architect"
     QMenu* appMenu = menuBar->addMenu("Story Architect");
-    aboutApplicationAction->setText(tr("About Story Architect"));
+    aboutApplicationAction->setText(QStringLiteral("Giới thiệu SNAKEMEDIA Studio"));
     aboutApplicationAction->setMenuRole(QAction::ApplicationSpecificRole);
     appMenu->addAction(aboutApplicationAction);
     appMenu->addSeparator();

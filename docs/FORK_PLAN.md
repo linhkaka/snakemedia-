@@ -135,6 +135,13 @@ Data model đã public (`src/corelib/business_layer/model/characters`, `location
 - Thư viện thêm vào phải tương thích GPL-3.0 (MIT, BSD, LGPL, Apache-2.0 đều được).
 
 ## 11. Trạng thái
+**Nhánh SNAKEMEDIA (11/11/2026):** người dùng yêu cầu một bản desktop riêng và chọn build qua GitHub Actions.
+Nguồn nền đã được lấy tại `c07a6ccc37d9560e0c5493393e2a253a0c97c441`; nhánh `phase-snakemedia-desktop`.
+Đã viết bộ thương hiệu/cách ly dữ liệu, Bàn sản xuất native, Qt Test và workflow Windows riêng.
+Không đổi `.starc` hoặc scope Google. Người dùng đã chọn repo `linhkaka/snakemedia-`; đang chuẩn bị chạy CI.
+19 kiểm tra nguồn đạt; chưa compile/chưa có EXE SNAKEMEDIA. Xem `README_SNAKEMEDIA.md` cho phạm vi,
+kiểm chứng và các file đã sửa.
+
 **Quyết định (chốt 03/11/2026):**
 - D1 = **không** có Google Workspace (Gmail thường): OAuth chế độ External, scope `drive.file`; Phase 1b dùng Google Picker.
 - D2 = **public fork**: https://github.com/vienglacial/starc

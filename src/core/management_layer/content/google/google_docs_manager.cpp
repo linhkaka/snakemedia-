@@ -40,7 +40,7 @@ namespace ManagementLayer {
 
 namespace {
 
-const QString kRootFolderName = QStringLiteral("Jenny Script");
+const QString kRootFolderName = QStringLiteral("SNAKEMEDIA Studio");
 const QString kDocxMimeType = QStringLiteral(
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
 const QString kHtmlMimeType = QStringLiteral("text/html; charset=UTF-8");
@@ -287,8 +287,8 @@ void GoogleDocsManager::Implementation::showError(const QString& _title,
         //
         if (_error.reason == QLatin1String("insufficientPermissions")) {
             authManager->signOut();
-            text = tr("Jenny Script has no access to Google Drive. Push again, sign in and tick the "
-                      "permission to see and edit the Google Drive files used with Jenny Script.");
+            text = tr("SNAKEMEDIA Studio has no access to Google Drive. Push again, sign in and tick the "
+                      "permission to see and edit the Google Drive files used with SNAKEMEDIA Studio.");
             break;
         }
         text = tr("Google denied access to the file. It may be owned by another account or "
@@ -329,7 +329,7 @@ void GoogleDocsManager::Implementation::withSignIn(const std::function<void()>& 
     static constexpr int cancelButtonId = 0;
     static constexpr int signInButtonId = 1;
     ask(tr("Sign in to Google"),
-        tr("The browser will open to sign in with your Google account. Jenny Script gets access "
+        tr("The browser will open to sign in with your Google account. SNAKEMEDIA Studio gets access "
            "only to the files it creates in your Google Drive."),
         { { cancelButtonId, tr("Cancel"), Dialog::RejectButton },
           { signInButtonId, tr("Sign in"), Dialog::AcceptButton } },

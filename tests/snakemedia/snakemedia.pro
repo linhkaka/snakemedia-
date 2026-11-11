@@ -1,0 +1,11 @@
+TEMPLATE = app
+TARGET = tst_snakemedia
+CONFIG += testcase c++17 console
+CONFIG -= app_bundle
+QT += testlib core
+QT -= gui
+BRIEF = $$PWD/../../src/core/management_layer/content/snakemedia
+HEADERS += $$BRIEF/production_brief.h
+SOURCES += $$BRIEF/production_brief.cpp tst_production_brief.cpp
+INCLUDEPATH += $$BRIEF
+win32-msvc*: QMAKE_CXXFLAGS += /utf-8

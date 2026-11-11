@@ -22927,12 +22927,12 @@ Nếu bạn làm việc liên tục, dự án được lưu mỗi 3 phút.</tran
             <translation>Không mở được máy chủ cục bộ để đăng nhập Google</translation>
         </message>
         <message>
-            <source>Signed in to Google. You can close this page and return to Jenny Script.</source>
-            <translation>Đã đăng nhập Google. Bạn có thể đóng trang này và quay lại Jenny Script.</translation>
+            <source>Signed in to Google. You can close this page and return to SNAKEMEDIA Studio.</source>
+            <translation>Đã đăng nhập Google. Bạn có thể đóng trang này và quay lại SNAKEMEDIA Studio.</translation>
         </message>
         <message>
-            <source>Google Drive access was not granted. Sign in again and tick the permission to see and edit the Google Drive files used with Jenny Script.</source>
-            <translation>Bạn chưa cấp quyền Google Drive. Hãy đăng nhập lại và tick ô quyền xem, chỉnh sửa các tệp Google Drive dùng với Jenny Script.</translation>
+            <source>Google Drive access was not granted. Sign in again and tick the permission to see and edit the Google Drive files used with SNAKEMEDIA Studio.</source>
+            <translation>Bạn chưa cấp quyền Google Drive. Hãy đăng nhập lại và tick ô quyền xem, chỉnh sửa các tệp Google Drive dùng với SNAKEMEDIA Studio.</translation>
         </message>
     </context>
     <context>
@@ -22974,8 +22974,8 @@ Nếu bạn làm việc liên tục, dự án được lưu mỗi 3 phút.</tran
             <translation>Đăng nhập Google</translation>
         </message>
         <message>
-            <source>The browser will open to sign in with your Google account. Jenny Script gets access only to the files it creates in your Google Drive.</source>
-            <translation>Trình duyệt sẽ mở để bạn đăng nhập tài khoản Google. Jenny Script chỉ được truy cập những file do chính nó tạo trong Google Drive của bạn.</translation>
+            <source>The browser will open to sign in with your Google account. SNAKEMEDIA Studio gets access only to the files it creates in your Google Drive.</source>
+            <translation>Trình duyệt sẽ mở để bạn đăng nhập tài khoản Google. SNAKEMEDIA Studio chỉ được truy cập những file do chính nó tạo trong Google Drive của bạn.</translation>
         </message>
         <message>
             <source>Cancel</source>
@@ -23066,8 +23066,8 @@ Nếu bạn làm việc liên tục, dự án được lưu mỗi 3 phút.</tran
             <translation>Thao tác Google Docs trước đó vẫn đang chạy.</translation>
         </message>
         <message>
-            <source>Jenny Script has no access to Google Drive. Push again, sign in and tick the permission to see and edit the Google Drive files used with Jenny Script.</source>
-            <translation>Jenny Script chưa có quyền truy cập Google Drive. Hãy bấm Đẩy lên lần nữa, đăng nhập và tick ô quyền xem, chỉnh sửa các tệp Google Drive dùng với Jenny Script.</translation>
+            <source>SNAKEMEDIA Studio has no access to Google Drive. Push again, sign in and tick the permission to see and edit the Google Drive files used with SNAKEMEDIA Studio.</source>
+            <translation>SNAKEMEDIA Studio chưa có quyền truy cập Google Drive. Hãy bấm Đẩy lên lần nữa, đăng nhập và tick ô quyền xem, chỉnh sửa các tệp Google Drive dùng với SNAKEMEDIA Studio.</translation>
         </message>
         <message>
             <source>Can't prepare the screenplay for Google Docs.</source>
